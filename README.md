@@ -20,6 +20,10 @@ This repository preserves the idea and the working source, including the dark gr
 - **Responsive dark interface:** desktop, iPhone, and iPad layouts with soft green and teal accents and slightly larger text.
 - **Calendar export:** an `.ics` snapshot of task deadlines and protected work blocks.
 
+## Settings
+
+Settings includes Dark (default), Light, and device theme preferences saved to the user’s account, work hours, connection management, manual source refresh, a JSON export of commitments and setup records, sign-out, and About. Theme colors cover the whole interface, including forms and dialogs. External authentication and provider pages keep their own appearance. Account management opens ChatGPT in another tab with Settings → Plugins (or Apps) instructions; Site reconnection is offered separately when a read reports reauthentication required.
+
 ## What is implemented—and what remains
 
 Source reads refresh every five minutes while the dashboard is open. Failed reads retain the previous snapshot and display its last-read time. Background and instant synchronization are future work.
@@ -73,8 +77,9 @@ npm run build
 Initialize the local D1 schema, applying each migration once to a new development database:
 
 ```sh
-npx wrangler d1 execute DB --local --config dist/server/wrangler.json --file drizzle/0000_early_puma.sql
-npx wrangler d1 execute DB --local --config dist/server/wrangler.json --file drizzle/0001_yummy_black_bird.sql
+npx wrangler d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_early_puma.sql
+npx wrangler d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0001_yummy_black_bird.sql
+npx wrangler d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0002_windy_red_wolf.sql
 npm run dev -- --port 5173 --hostname 127.0.0.1
 ```
 

@@ -18,7 +18,7 @@ export async function loadSource(owner:string,source:keyof typeof connectors,off
  try {
   const profile=await call("get_profile",source==="unityMail"&&!target?{link_id:unityLink}:{});
   const expected=target?.account||((source==="google"||source==="gmail")?"rob.k.brown.7@gmail.com":"rbrown@unityhomes.org");
-  if(profile.email?.toLowerCase()!==expected)throw new Error(`The connected app currently exposes ${profile.email||"an unknown account"}. This connection needs ${expected}. Open Manage access, select that account, then verify again.`);
+  if(profile.email?.toLowerCase()!==expected)throw new Error(`The connected app currently exposes ${profile.email||"an unknown account"}. This connection needs ${expected}. Open Manage accounts in ChatGPT, select that account, then verify again.`);
   let payload:any={account:profile.email,events:[],emails:[],partial:false,notes:[]};
   if(source==="google"||source==="outlook") {
    const key=plusDays(dateKey(),offset),timeMin=new Date(dayAt(key)).toISOString(),timeMax=new Date(dayAt(plusDays(key,14))).toISOString();

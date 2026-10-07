@@ -1,0 +1,1 @@
+ALTER TABLE `preferences` ADD `theme` text DEFAULT 'dark' NOT NULL;
