@@ -28,7 +28,7 @@ Settings includes Dark (default), Light, and device theme preferences saved to t
 
 Source reads refresh every five minutes while the dashboard is open. Failed reads retain the previous snapshot and display its last-read time. Background and instant synchronization are future work.
 
-Google and Microsoft connectors may expose one selected account per service. Saving an account does not authorize it. Verification checks the provider-reported email before loading that account's data; switching the selected account can interrupt reads for a previous account.
+The current Google Site consent screen selects one Gmail account and one Google Calendar account per visitor. Connecting multiple Google accounts in ChatGPT does not grant simultaneous reads from all of them. A different returned identity is reported as **Different account selected**, independently of authorization errors. The setup dialog offers **Review Site account selection**; switching stops live reads for the previous selection. Microsoft connectors may also expose one selected account per service. Saving an account does not authorize it. Verification checks the provider-reported email before loading that account's data; switching the selected account can interrupt reads for a previous account.
 
 Calendar reads cover a bounded 14-day window. Google reads the primary and Family calendars; Outlook reads the default and supported iCloud calendars, with pagination limits. A capacity estimate is only as complete as the sources it can see.
 
@@ -38,7 +38,7 @@ Direct Apple / iCloud account synchronization is unavailable. An Apple account c
 
 Protected blocks are stored in Partheanon. Exporting a calendar is a snapshot, not a live subscription or an external calendar update. The app does not automatically send messages or write to email, Notion, or external calendars.
 
-Aegis integration is exposed through Site MCP tools for reading commitments, analyzing workload, saving commitments, and protecting work blocks. Direct use requires the Site plugin and workspace permissions; plugin creation is currently blocked by the deployment workspace's permissions. The dashboard's capacity checks are deterministic rules, with no embedded model API call or API key.
+Aegis integration is exposed through Site MCP tools for reading commitments, analyzing workload, saving commitments, and protecting work blocks. Direct use requires the Site plugin and workspace permissions; availability depends on the deployment workspace's permissions. The dashboard's capacity checks are deterministic rules, with no embedded model API call or API key.
 
 ## Architecture
 
