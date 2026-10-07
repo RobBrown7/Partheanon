@@ -1,0 +1,62 @@
+{
+  "d1": "DB",
+  "r2": null,
+  "project_id": "appgprj_6ac674e520748191a52f9af5f874ce68",
+  "capabilities": [
+    "mcp"
+  ],
+  "plugins": [
+    {
+      "id": "plugin_connector_1p_95d39881713c8191931482a62d6edff9",
+      "connector_ids": [
+        "connector_2128aebfecb84f64a069897515042a44"
+      ]
+    },
+    {
+      "id": "plugin_connector_1p_f8509de903288191b14a160c6c5d20b0",
+      "connector_ids": [
+        "connector_947e0d954944416db111db556030eea6"
+      ]
+    },
+    {
+      "id": "plugin_connector_1p_fd0f4f41caa88191a9456514bbffa06d",
+      "connector_ids": [
+        "connector_e6a7394682e24467ac68c60696f275a4"
+      ]
+    },
+    {
+      "id": "plugin_connector_1p_6bcb5879c73c819196abc70016166099",
+      "connector_ids": [
+        "connector_4aaab2856305417b993eca9a216aaf6e"
+      ]
+    },
+    {
+      "id": "plugin_asdk_app_69c18c28f1188191bf5b8445c4ab0a2e",
+      "connector_ids": [
+        "asdk_app_69c18c28f1188191bf5b8445c4ab0a2e"
+      ]
+    }
+  ],
+  "connectors": [
+    {
+      "id": "connector_2128aebfecb84f64a069897515042a44",
+      "action_selection_mode": "read_only"
+    },
+    {
+      "id": "connector_947e0d954944416db111db556030eea6",
+      "action_selection_mode": "read_only"
+    },
+    {
+      "id": "connector_e6a7394682e24467ac68c60696f275a4",
+      "action_selection_mode": "read_only"
+    },
+    {
+      "id": "connector_4aaab2856305417b993eca9a216aaf6e",
+      "action_selection_mode": "read_only"
+    },
+    {
+      "id": "asdk_app_69c18c28f1188191bf5b8445c4ab0a2e",
+      "action_selection_mode": "read_only"
+    }
+  ]
+}
