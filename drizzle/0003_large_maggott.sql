@@ -1,0 +1,1 @@
+ALTER TABLE `commitments` ADD `source_key` text DEFAULT '' NOT NULL;

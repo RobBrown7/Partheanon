@@ -3,7 +3,7 @@ export const commitments = sqliteTable("commitments", {
  id: text("id").primaryKey(), owner: text("owner").notNull(), title: text("title").notNull(),
  project: text("project").notNull(), lane: text("lane").notNull(), stakeholder: text("stakeholder").notNull(),
  deadline: text("deadline").notNull(), minutes: integer("minutes").notNull(), status: text("status").notNull(),
- output: text("output").notNull(), sourceUrl: text("source_url").notNull(), createdAt: text("created_at").notNull()
+ output: text("output").notNull(), sourceUrl: text("source_url").notNull(), sourceKey: text("source_key").notNull().default(""), createdAt: text("created_at").notNull()
 });
 export const focusBlocks = sqliteTable("focus_blocks", {
  id: text("id").primaryKey(), owner: text("owner").notNull(), taskId: text("task_id").notNull(),

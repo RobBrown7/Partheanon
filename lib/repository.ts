@@ -3,7 +3,7 @@ import { getDb } from "../db";
 import { commitments, focusBlocks, sourceSnapshots, preferences, accountConnections } from "../db/schema";
 import { and, eq, gt, sql, like } from "drizzle-orm";
 import { z } from "zod";
-export const taskSchema=z.object({id:z.string().uuid(),title:z.string().trim().min(1).max(240),project:z.string().trim().max(100),lane:z.enum(["Unity Homes","AthenaWorx","SHP Beds","Personal"]),stakeholder:z.string().trim().max(240),deadline:z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(v=>new Date(v+"T12:00:00Z").toISOString().slice(0,10)===v),minutes:z.number().int().min(15).max(30000),status:z.enum(["open","doing","waiting","done"]),output:z.string().max(2000),sourceUrl:z.string().max(3000).refine(v=>!v||v.startsWith("https://"))});
+export const taskSchema=z.object({id:z.string().uuid(),title:z.string().trim().min(1).max(240),project:z.string().trim().max(100),lane:z.enum(["Unity Homes","AthenaWorx","SHP Beds","Personal"]),stakeholder:z.string().trim().max(240),deadline:z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(v=>new Date(v+"T12:00:00Z").toISOString().slice(0,10)===v),minutes:z.number().int().min(15).max(30000),status:z.enum(["open","doing","waiting","done"]),output:z.string().max(2000),sourceKey:z.string().max(30000).optional(),sourceUrl:z.string().max(3000).refine(v=>!v||v.startsWith("https://"))});
 export const blockSchema=z.object({id:z.string().uuid(),taskId:z.string().uuid(),title:z.string().min(1).max(240),start:z.string().datetime(),end:z.string().datetime()}).refine(b=>Date.parse(b.end)>Date.parse(b.start)&&Date.parse(b.end)-Date.parse(b.start)<=8*3600000,"Work block must last between 1 minute and 8 hours");
 export async function readState(owner:string) {
  const db=getDb();const [tasks,blocks,snapshots,prefs,connections]=await Promise.all([db.select().from(commitments).where(eq(commitments.owner,owner)),db.select().from(focusBlocks).where(eq(focusBlocks.owner,owner)),db.select().from(sourceSnapshots).where(eq(sourceSnapshots.owner,owner)),db.select().from(preferences).where(eq(preferences.owner,owner)),db.select().from(accountConnections).where(eq(accountConnections.owner,owner))]);
@@ -11,8 +11,8 @@ export async function readState(owner:string) {
 }
 export async function saveTask(owner:string,input:unknown) {
  const t=taskSchema.parse(input),db=getDb();const existing=await db.select().from(commitments).where(eq(commitments.id,t.id));if(existing.length&&existing[0].owner!==owner)throw new Error("Task not available");
- const values={...t,owner,createdAt:existing[0]?.createdAt||new Date().toISOString()};
- await db.insert(commitments).values(values).onConflictDoUpdate({target:commitments.id,set:t});if(t.status==="done")await db.delete(focusBlocks).where(and(eq(focusBlocks.owner,owner),eq(focusBlocks.taskId,t.id),gt(focusBlocks.end,new Date().toISOString())));return t;
+ const values={...t,sourceKey:existing[0]?.sourceKey||t.sourceKey||"",owner,createdAt:existing[0]?.createdAt||new Date().toISOString()};
+ await db.insert(commitments).values(values).onConflictDoUpdate({target:commitments.id,set:{...t,sourceKey:values.sourceKey}});if(t.status==="done")await db.delete(focusBlocks).where(and(eq(focusBlocks.owner,owner),eq(focusBlocks.taskId,t.id),gt(focusBlocks.end,new Date().toISOString())));return t;
 }
 export async function saveBlock(owner:string,input:unknown) {
  const b=blockSchema.parse(input),db=getDb();const task=await db.select().from(commitments).where(and(eq(commitments.id,b.taskId),eq(commitments.owner,owner)));if(!task.length||task[0].status==="done")throw new Error("Choose an active task");
