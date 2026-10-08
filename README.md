@@ -15,7 +15,7 @@ This repository preserves the idea and the working source, including the dark gr
 - **Projects:** commitments grouped by project and progress.
 - **Protected work time:** proposed and saved internal focus blocks, with calendar conflict checks and a 15-minute buffer.
 - **Inbox review:** recent Gmail and Outlook inbox candidates with rule-based importance signals; review is required before turning them into commitments.
-- **Committed source items:** meeting actions, Notion pages, and emails show Committed after a task is saved; clicking opens the existing task. Source associations persist through edits and completion. Older tasks are recognized when their source link and original title or output still match.
+- **Committed source items:** meeting actions, Notion pages, and emails show Committed after a task is saved; clicking opens the existing task. Completed source items are struck through and show Completed; reopening restores their appearance. Source associations persist through edits and completion. Older tasks are recognized when their source link and original title or output still match.
 - **Meeting notes:** an index of accessible Notion pages, meeting summaries, and unchecked action items, with coverage and freshness information.
 - **Connections:** save an additional Google or Microsoft account, choose its lane and services, open the secure access flow, and verify the actual account identity before reading data. Shortcuts include the accounts supplied during the original project setup.
 - **Responsive dark interface:** desktop, iPhone, and iPad layouts with soft green and teal accents and slightly larger text.
