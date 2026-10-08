@@ -127,3 +127,17 @@ These are product goals, not claims of current functionality.
 This GitHub snapshot is based on the dark-mode release from October 7, 2026, at Site source commit `bc4ab81d3af90bffe1e809a93228af1a9422c8f1`. It includes the complete tracked source and refreshed repository documentation. The Site's prior deployment history remains in its separate source repository; this archive does not import historical runtime data or credentials.
 
 Project creator: **Rob Brown (Forge)**. Planning partner: **Aegis**. No project-wide open-source license has been selected. Included third-party license notices remain in `build/` and `vendor/`.
+
+## Aegis chat
+
+Ask Aegis is available throughout the dashboard, including on mobile. The server uses the OpenAI Responses API (`gpt-5.4-mini`) with user-scoped, bounded dashboard context: commitments, calendar events, protected blocks, recent work logs, and capacity analysis. Raw inbox and Notion page bodies are not included. The conversation lasts for the current browser tab. API requests set `store: false`.
+
+Aegis can propose commitments and subtasks, actual work entries with AI-assisted minutes and skills, and internal protected time. Review each proposal and choose **Confirm & save**. Server-stored proposals expire after 30 minutes, reject changed task baselines, and are claimed once before applying existing ownership, hierarchy, time, and conflict checks. Confirmed work blocks can be exported through the existing calendar export.
+
+Configure `OPENAI_API_KEY` as a secret in the hosting environment; keep local development credentials in ignored `.env.local`. Never place credentials in browser code, backups, or this repository. A valid API project with billing is required. Chat requests are limited to six per user per minute.
+
+Local database additions:
+```sh
+npx wrangler d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0005_needy_forge.sql
+npx wrangler d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0006_typical_edwin_jarvis.sql
+```

@@ -26,3 +26,8 @@ export const workLogs = sqliteTable("work_logs", {
  workedOn:text("worked_on").notNull(),minutes:integer("minutes").notNull(),aiMinutes:integer("ai_minutes").notNull(),
  skills:text("skills").notNull(),notes:text("notes").notNull(),createdAt:text("created_at").notNull()
 });
+export const chatProposals = sqliteTable("chat_proposals", {
+ id:text("id").primaryKey(),owner:text("owner").notNull(),action:text("action").notNull(),payload:text("payload").notNull(),baseline:text("baseline"),status:text("status").notNull(),createdAt:text("created_at").notNull()
+});
+
+export const chatLimits = sqliteTable("chat_limits", {owner:text("owner").primaryKey(),window:text("window").notNull(),count:integer("count").notNull()});

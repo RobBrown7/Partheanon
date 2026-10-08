@@ -36,6 +36,20 @@
       "when": 1791471529967,
       "tag": "0004_aberrant_tusk",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1791483636598,
+      "tag": "0005_needy_forge",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1791483658937,
+      "tag": "0006_typical_edwin_jarvis",
+      "breakpoints": true
     }
   ]
 }
