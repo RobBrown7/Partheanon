@@ -1,18 +1,24 @@
+import { descendants,validateParent } from "./task-work.mjs";
 import { allSourceInfo } from "./connections";
 import { getDb } from "../db";
-import { commitments, focusBlocks, sourceSnapshots, preferences, accountConnections } from "../db/schema";
+import { commitments, focusBlocks, sourceSnapshots, preferences, accountConnections, workLogs } from "../db/schema";
 import { and, eq, gt, sql, like } from "drizzle-orm";
 import { z } from "zod";
-export const taskSchema=z.object({id:z.string().uuid(),title:z.string().trim().min(1).max(240),project:z.string().trim().max(100),lane:z.enum(["Unity Homes","AthenaWorx","SHP Beds","Personal"]),stakeholder:z.string().trim().max(240),deadline:z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(v=>new Date(v+"T12:00:00Z").toISOString().slice(0,10)===v),minutes:z.number().int().min(15).max(30000),status:z.enum(["open","doing","waiting","done"]),output:z.string().max(2000),sourceKey:z.string().max(30000).optional(),sourceUrl:z.string().max(3000).refine(v=>!v||v.startsWith("https://"))});
+export const taskSchema=z.object({id:z.string().uuid(),title:z.string().trim().min(1).max(240),project:z.string().trim().max(100),lane:z.enum(["Unity Homes","AthenaWorx","SHP Beds","Personal"]),stakeholder:z.string().trim().max(240),deadline:z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(v=>new Date(v+"T12:00:00Z").toISOString().slice(0,10)===v),minutes:z.number().int().min(0).max(30000),status:z.enum(["open","doing","waiting","done"]),output:z.string().max(2000),parentId:z.string().uuid().nullable().optional(),sourceKey:z.string().max(30000).optional(),sourceUrl:z.string().max(3000).refine(v=>!v||v.startsWith("https://"))});
 export const blockSchema=z.object({id:z.string().uuid(),taskId:z.string().uuid(),title:z.string().min(1).max(240),start:z.string().datetime(),end:z.string().datetime()}).refine(b=>Date.parse(b.end)>Date.parse(b.start)&&Date.parse(b.end)-Date.parse(b.start)<=8*3600000,"Work block must last between 1 minute and 8 hours");
 export async function readState(owner:string) {
- const db=getDb();const [tasks,blocks,snapshots,prefs,connections]=await Promise.all([db.select().from(commitments).where(eq(commitments.owner,owner)),db.select().from(focusBlocks).where(eq(focusBlocks.owner,owner)),db.select().from(sourceSnapshots).where(eq(sourceSnapshots.owner,owner)),db.select().from(preferences).where(eq(preferences.owner,owner)),db.select().from(accountConnections).where(eq(accountConnections.owner,owner))]);
- return {connections:connections.map(({owner,...c})=>c),tasks:tasks.map(({owner,...t})=>t),blocks:blocks.map(({owner,...b})=>b),sources:Object.fromEntries(snapshots.map(s=>[s.source,{...JSON.parse(s.payload),updatedAt:s.updatedAt}])),preferences:prefs[0]?{startHour:prefs[0].startHour,endHour:prefs[0].endHour,theme:prefs[0].theme}:{startHour:9,endHour:17,theme:"dark" as const}};
+ const db=getDb();const [tasks,blocks,snapshots,prefs,connections,logs]=await Promise.all([db.select().from(commitments).where(eq(commitments.owner,owner)),db.select().from(focusBlocks).where(eq(focusBlocks.owner,owner)),db.select().from(sourceSnapshots).where(eq(sourceSnapshots.owner,owner)),db.select().from(preferences).where(eq(preferences.owner,owner)),db.select().from(accountConnections).where(eq(accountConnections.owner,owner)),db.select().from(workLogs).where(eq(workLogs.owner,owner))]);
+ return {workLogs:logs.map(({owner,...l})=>({...l,skills:JSON.parse(l.skills)})),connections:connections.map(({owner,...c})=>c),tasks:tasks.map(({owner,...t})=>t),blocks:blocks.map(({owner,...b})=>b),sources:Object.fromEntries(snapshots.map(s=>[s.source,{...JSON.parse(s.payload),updatedAt:s.updatedAt}])),preferences:prefs[0]?{startHour:prefs[0].startHour,endHour:prefs[0].endHour,theme:prefs[0].theme}:{startHour:9,endHour:17,theme:"dark" as const}};
 }
 export async function saveTask(owner:string,input:unknown) {
  const t=taskSchema.parse(input),db=getDb();const existing=await db.select().from(commitments).where(eq(commitments.id,t.id));if(existing.length&&existing[0].owner!==owner)throw new Error("Task not available");
- const values={...t,sourceKey:existing[0]?.sourceKey||t.sourceKey||"",owner,createdAt:existing[0]?.createdAt||new Date().toISOString()};
- await db.insert(commitments).values(values).onConflictDoUpdate({target:commitments.id,set:{...t,sourceKey:values.sourceKey}});if(t.status==="done")await db.delete(focusBlocks).where(and(eq(focusBlocks.owner,owner),eq(focusBlocks.taskId,t.id),gt(focusBlocks.end,new Date().toISOString())));return t;
+ const owned=await db.select().from(commitments).where(eq(commitments.owner,owner));
+ const parentId=t.parentId===undefined?existing[0]?.parentId||null:t.parentId;
+ validateParent(owned,{...t,parentId});
+ const childIds=descendants(owned,t.id);
+ if(t.status==="done"&&owned.some(c=>childIds.has(c.id)&&c.status!=="done"))throw new Error("Complete the subtasks before completing this parent.");
+ const values={...t,parentId,sourceKey:existing[0]?.sourceKey||t.sourceKey||"",owner,createdAt:existing[0]?.createdAt||new Date().toISOString()};
+ await db.insert(commitments).values(values).onConflictDoUpdate({target:commitments.id,set:{...t,parentId,sourceKey:values.sourceKey}});if(t.status==="done")await db.delete(focusBlocks).where(and(eq(focusBlocks.owner,owner),eq(focusBlocks.taskId,t.id),gt(focusBlocks.end,new Date().toISOString())));return {...t,parentId,sourceKey:values.sourceKey};
 }
 export async function saveBlock(owner:string,input:unknown) {
  const b=blockSchema.parse(input),db=getDb();const task=await db.select().from(commitments).where(and(eq(commitments.id,b.taskId),eq(commitments.owner,owner)));if(!task.length||task[0].status==="done")throw new Error("Choose an active task");
@@ -45,3 +51,9 @@ export async function saveConnection(owner:string,input:unknown){
  return c;
 }
 export async function removeConnection(owner:string,id:string){z.string().uuid().parse(id);const db=getDb();await db.delete(accountConnections).where(and(eq(accountConnections.id,id),eq(accountConnections.owner,owner)));await db.delete(sourceSnapshots).where(and(eq(sourceSnapshots.owner,owner),like(sourceSnapshots.source,`account:${id}:%`)));}
+
+export const workLogSchema=z.object({id:z.string().uuid(),taskId:z.string().uuid(),workedOn:z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(v=>{const d=new Date(v+"T12:00:00Z");return !isNaN(d.valueOf())&&d.toISOString().slice(0,10)===v;}),minutes:z.number().int().min(1).max(1440),aiMinutes:z.number().int().min(0).max(1440),skills:z.array(z.string().trim().min(1).max(100)).max(30),notes:z.string().trim().max(2000)}).refine(l=>l.aiMinutes<=l.minutes,"AI-assisted minutes must be included within elapsed minutes.");
+export async function saveWorkLog(owner:string,input:unknown){const l=workLogSchema.parse(input),db=getDb();const task=await db.select().from(commitments).where(and(eq(commitments.id,l.taskId),eq(commitments.owner,owner)));if(!task.length)throw new Error("Task not available");
+ const existing=await db.select().from(workLogs).where(eq(workLogs.id,l.id));if(existing.length){if(existing[0].owner!==owner||existing[0].taskId!==l.taskId)throw new Error("Work log not available");return {...existing[0],skills:JSON.parse(existing[0].skills)};}
+ await db.insert(workLogs).values({...l,owner,skills:JSON.stringify([...new Set(l.skills)]),createdAt:new Date().toISOString()}).onConflictDoNothing();return l;}
+export async function removeWorkLog(owner:string,id:string){z.string().uuid().parse(id);await getDb().delete(workLogs).where(and(eq(workLogs.id,id),eq(workLogs.owner,owner)));}

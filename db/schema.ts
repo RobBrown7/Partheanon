@@ -3,7 +3,7 @@ export const commitments = sqliteTable("commitments", {
  id: text("id").primaryKey(), owner: text("owner").notNull(), title: text("title").notNull(),
  project: text("project").notNull(), lane: text("lane").notNull(), stakeholder: text("stakeholder").notNull(),
  deadline: text("deadline").notNull(), minutes: integer("minutes").notNull(), status: text("status").notNull(),
- output: text("output").notNull(), sourceUrl: text("source_url").notNull(), sourceKey: text("source_key").notNull().default(""), createdAt: text("created_at").notNull()
+ output: text("output").notNull(), sourceUrl: text("source_url").notNull(), sourceKey: text("source_key").notNull().default(""), parentId: text("parent_id"), createdAt: text("created_at").notNull()
 });
 export const focusBlocks = sqliteTable("focus_blocks", {
  id: text("id").primaryKey(), owner: text("owner").notNull(), taskId: text("task_id").notNull(),
@@ -20,3 +20,9 @@ export const accountConnections = sqliteTable("account_connections", {
  id:text("id").primaryKey(),owner:text("owner").notNull(),provider:text("provider",{enum:["google","microsoft","notion","apple"]}).notNull(),
  account:text("account").notNull(),lane:text("lane").notNull(),calendar:integer("calendar",{mode:"boolean"}).notNull(),mail:integer("mail",{mode:"boolean"}).notNull(),createdAt:text("created_at").notNull()
 },t=>[uniqueIndex("account_connections_owner_provider_account").on(t.owner,t.provider,t.account)]);
+
+export const workLogs = sqliteTable("work_logs", {
+ id:text("id").primaryKey(),owner:text("owner").notNull(),taskId:text("task_id").notNull(),
+ workedOn:text("worked_on").notNull(),minutes:integer("minutes").notNull(),aiMinutes:integer("ai_minutes").notNull(),
+ skills:text("skills").notNull(),notes:text("notes").notNull(),createdAt:text("created_at").notNull()
+});

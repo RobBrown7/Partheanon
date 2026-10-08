@@ -12,6 +12,8 @@ This repository preserves the idea and the working source, including the dark gr
 
 - **Overview and schedule:** a rolling 14-day calendar horizon, busy-event conflicts, work capacity, and deadline risk checks in America/Phoenix time.
 - **Commitments:** tasks with a project, lane, stakeholder, deadline, remaining work estimate, status, output, and source link.
+- **Parent–child commitments:** nested subtasks with their own deadlines and remaining estimates. Parent completion requires all subtasks to be complete; cycles and cross-user parents are rejected. Estimates cover each task’s own work.
+- **Actual work logs:** dated elapsed minutes, AI-assisted minutes included within elapsed time, skills used, and work performed. The edit page shows own time and totals including descendants. Entries are saved separately from task edits and can be removed. Logged time does not automatically reduce the remaining estimate.
 - **Projects:** commitments grouped by project and progress.
 - **Protected work time:** proposed and saved internal focus blocks, with calendar conflict checks and a 15-minute buffer.
 - **Inbox review:** recent Gmail and Outlook inbox candidates with rule-based importance signals; review is required before turning them into commitments.
@@ -39,7 +41,7 @@ Direct Apple / iCloud account synchronization is unavailable. An Apple account c
 
 Protected blocks are stored in Partheanon. Exporting a calendar is a snapshot, not a live subscription or an external calendar update. The app does not automatically send messages or write to email, Notion, or external calendars.
 
-Aegis integration is exposed through Site MCP tools for reading commitments, analyzing workload, saving commitments, and protecting work blocks. Direct use requires the Site plugin and workspace permissions; availability depends on the deployment workspace's permissions. The dashboard's capacity checks are deterministic rules, with no embedded model API call or API key.
+Aegis integration is exposed through Site MCP tools for reading commitments, analyzing workload, saving commitments with parent relationships, logging actual work with AI assistance and skills, and protecting work blocks. Direct use requires the Site plugin and workspace permissions; availability depends on the deployment workspace's permissions. The dashboard's capacity checks are deterministic rules, with no embedded model API call or API key.
 
 ## Architecture
 
@@ -82,6 +84,7 @@ npx wrangler d1 execute DB --local --config dist/server/wrangler.json --persist-
 npx wrangler d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0001_yummy_black_bird.sql
 npx wrangler d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0002_windy_red_wolf.sql
 npx wrangler d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0003_large_maggott.sql
+npx wrangler d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0004_aberrant_tusk.sql
 npm run dev -- --port 5173 --hostname 127.0.0.1
 ```
 
@@ -105,7 +108,7 @@ Production publishing uses the Sites workflow: check connector eligibility, buil
 
 The app stores tasks, work blocks, preferences, setup records, and cached source reads under the authenticated user's identity. Mutating browser requests require the same origin. Provider actions and additional-account lookups are selected by server-owned definitions.
 
-This repository includes source configuration and account-specific defaults needed to preserve this version. It excludes OAuth credentials, tokens, environment secrets, database contents, source caches, personal inbox/calendar/meeting-note exports, screenshots, build output, and local agent state. Schema migrations are included; personal database records are not.
+This repository includes source configuration and account-specific defaults needed to preserve this version. It excludes OAuth credentials, tokens, environment secrets, database contents, source caches, actual work records, personal inbox/calendar/meeting-note exports, screenshots, build output, and local agent state. Schema migrations are included; personal database records are not.
 
 Never commit real data to fixtures or documentation. `.gitignore` prevents common local artifacts from being added, but inspect staged changes before every push.
 
