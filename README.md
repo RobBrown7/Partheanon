@@ -135,6 +135,8 @@ Project creator: **Rob Brown (Forge)**. Planning partner: **Aegis**. No project-
 
 Ask Aegis is available throughout the dashboard, including on mobile. The server uses the OpenAI Responses API (`gpt-5.4-mini`) with user-scoped, bounded dashboard context: commitments, calendar events, protected blocks, recent work logs, and capacity analysis. Raw inbox and Notion page bodies are not included. The conversation lasts for the current browser tab. API requests set `store: false`.
 
+Messages allow up to 20,000 characters, with a visible composer count. Prior assistant replies have a separate 30,000-character allowance so a long answer cannot block a short follow-up. Requests retain up to 16 recent messages within 60,000 characters, dropping whole older messages rather than cutting the latest request. Invalid input produces readable feedback and preserves the draft.
+
 Aegis can propose commitments and subtasks, actual work entries with AI-assisted minutes and skills, and internal protected time. Review each proposal and choose **Confirm & save**. Server-stored proposals expire after 30 minutes, reject changed task baselines, and are claimed once before applying existing ownership, hierarchy, time, and conflict checks. Confirmed work blocks can be exported through the existing calendar export.
 
 Configure `OPENAI_API_KEY` as a secret in the hosting environment; keep local development credentials in ignored `.env.local`. Never place credentials in browser code, backups, or this repository. A valid API project with billing is required. Chat requests are limited to six per user per minute.

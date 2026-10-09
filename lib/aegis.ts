@@ -7,13 +7,13 @@ import {readState,saveTask,saveWorkLog,saveBlock,taskSchema,workLogSchema,blockS
 import {prioritize} from "./prioritization.mjs";
 import {allSourceInfo} from "./connections";
 import {analyze,dateKey,dayAt,plusDays} from "./planning.mjs";
+import {prepareChatMessages} from "./chat-messages.mjs";
 const fields={taskId:{type:["string","null"],description:"Existing task UUID to edit, or null to create"},title:{type:"string"},deadline:{type:"string"},project:{type:"string"},lane:{type:"string",enum:["Unity Homes","AthenaWorx","SHP Beds","Personal"]},stakeholder:{type:"string"},minutes:{type:"integer",description:"Remaining own-work minutes"},status:{type:"string",enum:["open","doing","waiting","done"]},lifeHealthSafety:{type:"boolean"},securityPrivacy:{type:"boolean"},important:{type:["boolean","null"]},dependsOn:{type:"array",items:{type:"string"},description:"UUIDs of prerequisite commitments that must be complete before this task; only record confirmed dependencies"},delayImpact:{type:"string",enum:["unknown","people","service","financial","safety","opportunity"]},peopleBlocked:{type:"boolean"},delayConsequence:{type:"string"},output:{type:"string"},parentId:{type:["string","null"]}};
 const tools=[{type:"function",name:"save_commitment",description:"Propose creating or editing a commitment or subtask. Ask for a deadline if unknown. This only creates a proposal for user confirmation.",strict:false,parameters:{type:"object",properties:fields,additionalProperties:false}},
  {type:"function",name:"log_work",description:"Propose a confirmed actual work entry. Ask for uncertain time. AI minutes are included in elapsed time. Never estimate hours from chat messages.",strict:false,parameters:{type:"object",properties:{taskId:{type:"string"},workedOn:{type:"string"},minutes:{type:"integer"},aiMinutes:{type:"integer"},skills:{type:"array",items:{type:"string"}},notes:{type:"string"}},required:["taskId","workedOn","minutes","aiMinutes","skills","notes"],additionalProperties:false}},
  {type:"function",name:"protect_time",description:"Propose an internal work block for an existing task; check calendar conflicts and incomplete coverage. Not an external calendar update.",strict:false,parameters:{type:"object",properties:{taskId:{type:"string"},start:{type:"string"},end:{type:"string"}},required:["taskId","start","end"],additionalProperties:false}}];
 export async function askAegis(owner:string,input:unknown){
- const messages=z.array(z.object({role:z.enum(["user","assistant"]),content:z.string().min(1).max(4000)})).min(1).max(16).parse(input);
- if(messages.at(-1)?.role!=="user")throw new Error("Send a user message.");
+ const messages=prepareChatMessages(input);
  const key=(env as unknown as Record<string,string>).OPENAI_API_KEY;if(!key)throw new Error("Aegis chat needs its server credential configured.");
  const window=new Date().toISOString().slice(0,16),db=getDb();
  const [limit]=await db.insert(chatLimits).values({owner,window,count:1}).onConflictDoUpdate({target:chatLimits.owner,set:{window,count:sql`CASE WHEN ${chatLimits.window} = ${window} THEN ${chatLimits.count} + 1 ELSE 1 END`}}).returning();
