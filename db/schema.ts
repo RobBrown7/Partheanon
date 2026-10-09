@@ -3,7 +3,7 @@ export const commitments = sqliteTable("commitments", {
  id: text("id").primaryKey(), owner: text("owner").notNull(), title: text("title").notNull(),
  project: text("project").notNull(), lane: text("lane").notNull(), stakeholder: text("stakeholder").notNull(),
  deadline: text("deadline").notNull(), minutes: integer("minutes").notNull(), status: text("status").notNull(),
- delayImpact:text("delay_impact").notNull().default("unknown"),peopleBlocked:integer("people_blocked",{mode:"boolean"}).notNull().default(false),delayConsequence:text("delay_consequence").notNull().default(""),output: text("output").notNull(), sourceUrl: text("source_url").notNull(), sourceKey: text("source_key").notNull().default(""), parentId: text("parent_id"), createdAt: text("created_at").notNull()
+ lifeHealthSafety:integer("life_health_safety",{mode:"boolean"}).notNull().default(false),securityPrivacy:integer("security_privacy",{mode:"boolean"}).notNull().default(false),important:integer("important",{mode:"boolean"}),dependsOn:text("depends_on").notNull().default("[]"),delayImpact:text("delay_impact").notNull().default("unknown"),peopleBlocked:integer("people_blocked",{mode:"boolean"}).notNull().default(false),delayConsequence:text("delay_consequence").notNull().default(""),output: text("output").notNull(), sourceUrl: text("source_url").notNull(), sourceKey: text("source_key").notNull().default(""), parentId: text("parent_id"), createdAt: text("created_at").notNull()
 });
 export const focusBlocks = sqliteTable("focus_blocks", {
  id: text("id").primaryKey(), owner: text("owner").notNull(), taskId: text("task_id").notNull(),

@@ -11,6 +11,7 @@ This repository preserves the idea and the working source, including the dark gr
 ## Current experience
 
 - **Overview and schedule:** a rolling 14-day calendar horizon, busy-event conflicts, work capacity, and deadline risk checks in America/Phoenix time.
+- **Adapted Eisenhower priorities:** life/health/safety first, security/privacy second. Importance is explicit and urgency follows deadlines/capacity. Confirmed prerequisites unlock downstream work and inherit its protection group. Blocked protected work is surfaced; prerequisite cycles (including parent completion constraints) and completion before prerequisites are rejected. Your chosen task comes first within protection groups. Unknown importance remains unassessed.
 - **Focus order:** a changing, explained sequence combining user-recorded delay consequences and people held up, deadline pressure, calendar capacity, protected blocks, progress, and parent deadlines. Waiting tasks and zero-estimate containers remain separate. Choose next persists across devices. Review with Aegis opens a prepared prompt; send it for contextual advice. Missing calendar coverage is labeled, and unknown stakes are not inferred.
 - **Commitments:** tasks with a project, lane, stakeholder, deadline, remaining work estimate, status, output, and source link.
 - **Parent–child commitments:** nested subtasks with their own deadlines and remaining estimates. Parent completion requires all subtasks to be complete; cycles and cross-user parents are rejected. Estimates cover each task’s own work.
