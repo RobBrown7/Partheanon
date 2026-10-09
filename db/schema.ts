@@ -31,3 +31,7 @@ export const chatProposals = sqliteTable("chat_proposals", {
 });
 
 export const chatLimits = sqliteTable("chat_limits", {owner:text("owner").primaryKey(),window:text("window").notNull(),count:integer("count").notNull()});
+
+export const oauthClients=sqliteTable("oauth_clients",{owner:text("owner").notNull(),provider:text("provider").notNull(),sealed:text("sealed").notNull(),updatedAt:text("updated_at").notNull()},t=>[primaryKey({columns:[t.owner,t.provider]})]);
+export const oauthStates=sqliteTable("oauth_states",{state:text("state").primaryKey(),owner:text("owner").notNull(),provider:text("provider").notNull(),account:text("account").notNull(),verifier:text("verifier").notNull(),expiresAt:integer("expires_at").notNull(),used:integer("used",{mode:"boolean"}).notNull().default(false)});
+export const oauthAccounts=sqliteTable("oauth_accounts",{owner:text("owner").notNull(),provider:text("provider").notNull(),account:text("account").notNull(),sealed:text("sealed").notNull(),updatedAt:text("updated_at").notNull(),refreshUntil:integer("refresh_until").notNull().default(0)},t=>[primaryKey({columns:[t.owner,t.provider,t.account]})]);

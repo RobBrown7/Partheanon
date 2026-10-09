@@ -141,3 +141,27 @@ Local database additions:
 npx wrangler d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0005_needy_forge.sql
 npx wrangler d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0006_typical_edwin_jarvis.sql
 ```
+
+## Connection troubleshooting
+
+Connections → **Check account routing** reads each declared service's profile independently, reports the actual selected email, and compares it with configured accounts. Account identity verification is separate from calendar/mail data verification. The authenticated `/connection-diagnostics` page exposes the request's provider tool schema under technical details. It does not expose credentials or modify consent.
+
+As verified October 8, 2026, hosted Sites profile tools have no `link_id` account selector, while direct Gmail and Google Calendar plugin tools support multiple account links. The Site consent screen selects one account per service. A saved additional-account record cannot change that routing. Never remove the email identity check to disguise a mismatch. Continuous refresh from all accounts requires an integration that supports separate account routes.
+
+## Direct Google and Microsoft connections
+
+Connections → **Direct account connections** supports one app registration per provider and a separate OAuth grant per configured account. Register a Google Web application with Gmail API and Google Calendar API enabled, or a Microsoft Entra Web application supporting organizational and personal Microsoft accounts. Copy the exact callback URI shown in the setup panel. Enter the client ID and secret in that private form, never in chat or repository files.
+
+Server secret `OAUTH_ENCRYPTION_KEY` is a base64url-encoded 32-byte random key. Client credentials and refresh/access tokens are AES-GCM encrypted in D1 with ownership/provider/account authenticated data. Keep this key stable: replacing it requires reconfiguring registrations and reconnecting accounts. API status and backups exclude credentials and tokens. OAuth uses PKCE, an expiring single-use state tied to the signed-in owner, and an exact provider email check. Refreshes use a per-account database lock. Requests use read-only Gmail/Calendar and Microsoft Graph Mail.Read/Calendars.Read permissions.
+
+After a direct grant, that account's source reads use its own tokens rather than the Site's single-account plugin route. Accounts without direct grants retain the existing plugin route. Direct errors retain saved snapshots and do not silently switch accounts. Read windows and inbox limits remain bounded and are reported as partial when appropriate. Refresh currently runs every five minutes while the dashboard is open; unattended refresh and push subscriptions are not implemented.
+
+Google External apps in Testing need each intended email added as a test user and may issue refresh tokens that expire after seven days. Wider public distribution using Gmail restricted scopes requires Google's applicable verification. Microsoft organizational policies can require admin consent. The connection panel separates authorization from verified data reads.
+
+Additional local migrations:
+```sh
+npx wrangler d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0007_mysterious_wonder_man.sql
+npx wrangler d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0008_fat_sasquatch.sql
+```
+
+Provider flow references: [Google Web server OAuth](https://developers.google.com/identity/protocols/oauth2/web-server) and [Microsoft authorization code flow](https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-auth-code-flow).

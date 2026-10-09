@@ -2,8 +2,11 @@ import { connectorsForRequest } from "./connectors";
 import { normalizeEvents,normalizeEmails,dateKey,plusDays,dayAt } from "./planning.mjs";
 import { saveSnapshot } from "./repository";
 import { accountMismatch } from "./source-identity.mjs";
+import {loadDirect} from "./direct-sources";
 const connectors={google:"connector_947e0d954944416db111db556030eea6",outlook:"connector_e6a7394682e24467ac68c60696f275a4",gmail:"connector_2128aebfecb84f64a069897515042a44",unityMail:"connector_4aaab2856305417b993eca9a216aaf6e"};
 export async function loadSource(owner:string,source:keyof typeof connectors,offset:number,target?:{account:string;lane:string;snapshotKey:string}){
+ const expected=target?.account||((source==="google"||source==="gmail")?"rob.k.brown.7@gmail.com":"rbrown@unityhomes.org");
+ try{const direct=await loadDirect(owner,source,offset,expected,target?.lane||((source==="google"||source==="gmail")?"Personal":"Unity Homes"),target?.snapshotKey||source);if(direct)return direct;}catch(e:any){return {status:"direct_connection_error",message:e.message||"Direct connection read failed",retryAfterMs:e.retryAfterMs};}
  const api=connectorsForRequest(),cid=connectors[source];let lastResult:any;
  const context=await api.getContext();const toolHints=context.status==="success"?context.connectors.find(c=>c.connectorId===cid)?.tools:null;
  const call=async(action:string,args:Record<string,any>={})=>{
@@ -16,7 +19,6 @@ export async function loadSource(owner:string,source:keyof typeof connectors,off
  };
  try {
   const profile=await call("get_profile");
-  const expected=target?.account||((source==="google"||source==="gmail")?"rob.k.brown.7@gmail.com":"rbrown@unityhomes.org");
   const mismatch=accountMismatch(profile.email,expected);if(mismatch)return mismatch;
   let payload:any={account:profile.email,events:[],emails:[],partial:false,notes:[]};
   if(source==="google"||source==="outlook") {

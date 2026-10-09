@@ -1,7 +1,7 @@
 import { descendants,validateParent } from "./task-work.mjs";
 import { allSourceInfo } from "./connections";
 import { getDb } from "../db";
-import { commitments, focusBlocks, sourceSnapshots, preferences, accountConnections, workLogs } from "../db/schema";
+import { commitments, focusBlocks, sourceSnapshots, preferences, accountConnections, workLogs, oauthAccounts, oauthStates } from "../db/schema";
 import { and, eq, gt, sql, like } from "drizzle-orm";
 import { z } from "zod";
 export const taskSchema=z.object({id:z.string().uuid(),title:z.string().trim().min(1).max(240),project:z.string().trim().max(100),lane:z.enum(["Unity Homes","AthenaWorx","SHP Beds","Personal"]),stakeholder:z.string().trim().max(240),deadline:z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(v=>new Date(v+"T12:00:00Z").toISOString().slice(0,10)===v),minutes:z.number().int().min(0).max(30000),status:z.enum(["open","doing","waiting","done"]),output:z.string().max(2000),parentId:z.string().uuid().nullable().optional(),sourceKey:z.string().max(30000).optional(),sourceUrl:z.string().max(3000).refine(v=>!v||v.startsWith("https://"))});
@@ -50,7 +50,7 @@ export async function saveConnection(owner:string,input:unknown){
  const values={...c,owner,createdAt:existing[0]?.createdAt||new Date().toISOString()};await db.insert(accountConnections).values(values).onConflictDoUpdate({target:accountConnections.id,set:{lane:c.lane,calendar:c.calendar,mail:c.mail}});
  return c;
 }
-export async function removeConnection(owner:string,id:string){z.string().uuid().parse(id);const db=getDb();await db.delete(accountConnections).where(and(eq(accountConnections.id,id),eq(accountConnections.owner,owner)));await db.delete(sourceSnapshots).where(and(eq(sourceSnapshots.owner,owner),like(sourceSnapshots.source,`account:${id}:%`)));}
+export async function removeConnection(owner:string,id:string){z.string().uuid().parse(id);const db=getDb();const [connection]=await db.select().from(accountConnections).where(and(eq(accountConnections.id,id),eq(accountConnections.owner,owner)));if(connection)await db.delete(oauthStates).where(and(eq(oauthStates.owner,owner),eq(oauthStates.provider,connection.provider),eq(oauthStates.account,connection.account.toLowerCase())));if(connection)await db.delete(oauthAccounts).where(and(eq(oauthAccounts.owner,owner),eq(oauthAccounts.provider,connection.provider),eq(oauthAccounts.account,connection.account.toLowerCase())));await db.delete(accountConnections).where(and(eq(accountConnections.id,id),eq(accountConnections.owner,owner)));await db.delete(sourceSnapshots).where(and(eq(sourceSnapshots.owner,owner),like(sourceSnapshots.source,`account:${id}:%`)));}
 
 export const workLogSchema=z.object({id:z.string().uuid(),taskId:z.string().uuid(),workedOn:z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(v=>{const d=new Date(v+"T12:00:00Z");return !isNaN(d.valueOf())&&d.toISOString().slice(0,10)===v;}),minutes:z.number().int().min(1).max(1440),aiMinutes:z.number().int().min(0).max(1440),skills:z.array(z.string().trim().min(1).max(100)).max(30),notes:z.string().trim().max(2000)}).refine(l=>l.aiMinutes<=l.minutes,"AI-assisted minutes must be included within elapsed minutes.");
 export async function saveWorkLog(owner:string,input:unknown){const l=workLogSchema.parse(input),db=getDb();const task=await db.select().from(commitments).where(and(eq(commitments.id,l.taskId),eq(commitments.owner,owner)));if(!task.length)throw new Error("Task not available");

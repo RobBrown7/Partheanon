@@ -1,0 +1,1 @@
+ALTER TABLE `oauth_accounts` ADD `refresh_until` integer DEFAULT 0 NOT NULL;
