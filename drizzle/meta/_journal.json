@@ -71,6 +71,13 @@
       "when": 1791520849356,
       "tag": "0009_short_mindworm",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1791580455503,
+      "tag": "0010_wooden_micromacro",
+      "breakpoints": true
     }
   ]
 }

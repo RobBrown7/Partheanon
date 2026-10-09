@@ -37,3 +37,5 @@ export const oauthStates=sqliteTable("oauth_states",{state:text("state").primary
 export const oauthAccounts=sqliteTable("oauth_accounts",{owner:text("owner").notNull(),provider:text("provider").notNull(),account:text("account").notNull(),sealed:text("sealed").notNull(),updatedAt:text("updated_at").notNull(),refreshUntil:integer("refresh_until").notNull().default(0)},t=>[primaryKey({columns:[t.owner,t.provider,t.account]})]);
 
 export const dismissedEmails=sqliteTable("dismissed_emails",{owner:text("owner").notNull(),emailId:text("email_id").notNull(),dismissedAt:text("dismissed_at").notNull()},t=>[primaryKey({columns:[t.owner,t.emailId]})]);
+
+export const workOutputs=sqliteTable("work_outputs",{id:text("id").primaryKey(),owner:text("owner").notNull(),taskId:text("task_id").notNull(),workedOn:text("worked_on").notNull(),notes:text("notes").notNull(),createdAt:text("created_at").notNull(),updatedAt:text("updated_at").notNull()});

@@ -13,6 +13,7 @@ This repository preserves the idea and the working source, including the dark gr
 - **Overview and schedule:** a rolling 14-day calendar horizon, busy-event conflicts, work capacity, and deadline risk checks in America/Phoenix time.
 - **Commitments:** tasks with a project, lane, stakeholder, deadline, remaining work estimate, status, output, and source link.
 - **Parent–child commitments:** nested subtasks with their own deadlines and remaining estimates. Parent completion requires all subtasks to be complete; cycles and cross-user parents are rejected. Estimates cover each task’s own work.
+- **Work performed / output:** separate dated notes per commitment, with up to 20,000 characters, bullet lists, bold text, headings, code, and a preview. Notes can be edited or removed and are included in backups. They do not add work time or mark subtasks complete. Timed work entries also accept 20,000-character notes.
 - **Actual work logs:** dated elapsed minutes, AI-assisted minutes included within elapsed time, skills used, and work performed. The edit page shows own time and totals including descendants. Entries are saved separately from task edits and can be removed. Logged time does not automatically reduce the remaining estimate.
 - **Projects:** commitments grouped by project and progress.
 - **Protected work time:** proposed and saved internal focus blocks, with calendar conflict checks and a 15-minute buffer.
