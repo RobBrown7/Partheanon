@@ -1,14 +1,14 @@
 import { descendants,validateParent } from "./task-work.mjs";
 import { allSourceInfo } from "./connections";
 import { getDb } from "../db";
-import { commitments, focusBlocks, sourceSnapshots, preferences, accountConnections, workLogs, oauthAccounts, oauthStates } from "../db/schema";
+import { commitments, focusBlocks, sourceSnapshots, preferences, accountConnections, workLogs, oauthAccounts, oauthStates, dismissedEmails } from "../db/schema";
 import { and, eq, gt, sql, like } from "drizzle-orm";
 import { z } from "zod";
 export const taskSchema=z.object({id:z.string().uuid(),title:z.string().trim().min(1).max(240),project:z.string().trim().max(100),lane:z.enum(["Unity Homes","AthenaWorx","SHP Beds","Personal"]),stakeholder:z.string().trim().max(240),deadline:z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(v=>new Date(v+"T12:00:00Z").toISOString().slice(0,10)===v),minutes:z.number().int().min(0).max(30000),status:z.enum(["open","doing","waiting","done"]),output:z.string().max(2000),parentId:z.string().uuid().nullable().optional(),sourceKey:z.string().max(30000).optional(),sourceUrl:z.string().max(3000).refine(v=>!v||v.startsWith("https://"))});
 export const blockSchema=z.object({id:z.string().uuid(),taskId:z.string().uuid(),title:z.string().min(1).max(240),start:z.string().datetime(),end:z.string().datetime()}).refine(b=>Date.parse(b.end)>Date.parse(b.start)&&Date.parse(b.end)-Date.parse(b.start)<=8*3600000,"Work block must last between 1 minute and 8 hours");
 export async function readState(owner:string) {
- const db=getDb();const [tasks,blocks,snapshots,prefs,connections,logs]=await Promise.all([db.select().from(commitments).where(eq(commitments.owner,owner)),db.select().from(focusBlocks).where(eq(focusBlocks.owner,owner)),db.select().from(sourceSnapshots).where(eq(sourceSnapshots.owner,owner)),db.select().from(preferences).where(eq(preferences.owner,owner)),db.select().from(accountConnections).where(eq(accountConnections.owner,owner)),db.select().from(workLogs).where(eq(workLogs.owner,owner))]);
- return {workLogs:logs.map(({owner,...l})=>({...l,skills:JSON.parse(l.skills)})),connections:connections.map(({owner,...c})=>c),tasks:tasks.map(({owner,...t})=>t),blocks:blocks.map(({owner,...b})=>b),sources:Object.fromEntries(snapshots.map(s=>[s.source,{...JSON.parse(s.payload),updatedAt:s.updatedAt}])),preferences:prefs[0]?{startHour:prefs[0].startHour,endHour:prefs[0].endHour,theme:prefs[0].theme}:{startHour:9,endHour:17,theme:"dark" as const}};
+ const db=getDb();const [tasks,blocks,snapshots,prefs,connections,logs,dismissed]=await Promise.all([db.select().from(commitments).where(eq(commitments.owner,owner)),db.select().from(focusBlocks).where(eq(focusBlocks.owner,owner)),db.select().from(sourceSnapshots).where(eq(sourceSnapshots.owner,owner)),db.select().from(preferences).where(eq(preferences.owner,owner)),db.select().from(accountConnections).where(eq(accountConnections.owner,owner)),db.select().from(workLogs).where(eq(workLogs.owner,owner)),db.select().from(dismissedEmails).where(eq(dismissedEmails.owner,owner))]);
+ return {dismissedEmails:dismissed.map(d=>d.emailId),workLogs:logs.map(({owner,...l})=>({...l,skills:JSON.parse(l.skills)})),connections:connections.map(({owner,...c})=>c),tasks:tasks.map(({owner,...t})=>t),blocks:blocks.map(({owner,...b})=>b),sources:Object.fromEntries(snapshots.map(s=>[s.source,{...JSON.parse(s.payload),updatedAt:s.updatedAt}])),preferences:prefs[0]?{startHour:prefs[0].startHour,endHour:prefs[0].endHour,theme:prefs[0].theme}:{startHour:9,endHour:17,theme:"dark" as const}};
 }
 export async function saveTask(owner:string,input:unknown) {
  const t=taskSchema.parse(input),db=getDb();const existing=await db.select().from(commitments).where(eq(commitments.id,t.id));if(existing.length&&existing[0].owner!==owner)throw new Error("Task not available");
@@ -57,3 +57,12 @@ export async function saveWorkLog(owner:string,input:unknown){const l=workLogSch
  const existing=await db.select().from(workLogs).where(eq(workLogs.id,l.id));if(existing.length){if(existing[0].owner!==owner||existing[0].taskId!==l.taskId)throw new Error("Work log not available");return {...existing[0],skills:JSON.parse(existing[0].skills)};}
  await db.insert(workLogs).values({...l,owner,skills:JSON.stringify([...new Set(l.skills)]),createdAt:new Date().toISOString()}).onConflictDoNothing();return l;}
 export async function removeWorkLog(owner:string,id:string){z.string().uuid().parse(id);await getDb().delete(workLogs).where(and(eq(workLogs.id,id),eq(workLogs.owner,owner)));}
+
+export async function dismissEmail(owner:string,input:unknown){
+ const id=z.string().trim().min(1).max(2000).parse(input),db=getDb();
+ const snapshots=await db.select().from(sourceSnapshots).where(eq(sourceSnapshots.owner,owner));
+ const configured=allSourceInfo(await db.select().from(accountConnections).where(eq(accountConnections.owner,owner)));
+ if(!snapshots.some(s=>configured[s.source]?.kind==="mail"&&(JSON.parse(s.payload).emails||[]).some((e:any)=>e.id===id)))throw new Error("Email is no longer available in your review list. Refresh and try again.");
+ await db.insert(dismissedEmails).values({owner,emailId:id,dismissedAt:new Date().toISOString()}).onConflictDoNothing();return {id};
+}
+export async function restoreEmail(owner:string,input:unknown){const id=z.string().trim().min(1).max(2000).parse(input);await getDb().delete(dismissedEmails).where(and(eq(dismissedEmails.owner,owner),eq(dismissedEmails.emailId,id)));return {id};}
