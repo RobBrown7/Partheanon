@@ -3,7 +3,7 @@ export const commitments = sqliteTable("commitments", {
  id: text("id").primaryKey(), owner: text("owner").notNull(), title: text("title").notNull(),
  project: text("project").notNull(), lane: text("lane").notNull(), stakeholder: text("stakeholder").notNull(),
  deadline: text("deadline").notNull(), minutes: integer("minutes").notNull(), status: text("status").notNull(),
- output: text("output").notNull(), sourceUrl: text("source_url").notNull(), sourceKey: text("source_key").notNull().default(""), parentId: text("parent_id"), createdAt: text("created_at").notNull()
+ delayImpact:text("delay_impact").notNull().default("unknown"),peopleBlocked:integer("people_blocked",{mode:"boolean"}).notNull().default(false),delayConsequence:text("delay_consequence").notNull().default(""),output: text("output").notNull(), sourceUrl: text("source_url").notNull(), sourceKey: text("source_key").notNull().default(""), parentId: text("parent_id"), createdAt: text("created_at").notNull()
 });
 export const focusBlocks = sqliteTable("focus_blocks", {
  id: text("id").primaryKey(), owner: text("owner").notNull(), taskId: text("task_id").notNull(),
@@ -14,7 +14,7 @@ export const sourceSnapshots = sqliteTable("source_snapshots", {
  updatedAt: text("updated_at").notNull()
 }, (t) => [primaryKey({columns: [t.owner,t.source]})]);
 export const preferences = sqliteTable("preferences", {
- owner: text("owner").primaryKey(), startHour: integer("start_hour").notNull(), endHour: integer("end_hour").notNull(), theme:text("theme",{enum:["dark","light","system"]}).notNull().default("dark")
+ owner: text("owner").primaryKey(),focusTaskId:text("focus_task_id"), startHour: integer("start_hour").notNull(), endHour: integer("end_hour").notNull(), theme:text("theme",{enum:["dark","light","system"]}).notNull().default("dark")
 });
 export const accountConnections = sqliteTable("account_connections", {
  id:text("id").primaryKey(),owner:text("owner").notNull(),provider:text("provider",{enum:["google","microsoft","notion","apple"]}).notNull(),
