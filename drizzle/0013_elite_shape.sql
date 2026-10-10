@@ -1,0 +1,1 @@
+ALTER TABLE `commitments` ADD `deadline_source` text DEFAULT 'unknown' NOT NULL;

@@ -170,3 +170,7 @@ npx wrangler d1 execute DB --local --config dist/server/wrangler.json --persist-
 ```
 
 Provider flow references: [Google Web server OAuth](https://developers.google.com/identity/protocols/oauth2/web-server) and [Microsoft authorization code flow](https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-auth-code-flow).
+
+## Capacity drill-downs
+
+Overview and Schedule link Open commitments, Time conflicts, and Deadlines at risk to complete lists across all lanes. Conflicts show both events and their exact shared interval, with calendar links and a targeted Aegis review. Risk reviews show the cumulative capacity reason and offer task editing or Aegis planning. Deadline source is recorded as unknown, self-imposed, or external; legacy edits preserve it. Aegis asks about deadline ownership, negotiability and consequences before recommending changes. Rescheduling and delegation are discussed as options; external calendars or handoffs are not executed by this chat.
