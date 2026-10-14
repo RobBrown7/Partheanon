@@ -174,3 +174,7 @@ Provider flow references: [Google Web server OAuth](https://developers.google.co
 ## Capacity drill-downs
 
 Overview and Schedule link Open commitments, Time conflicts, and Deadlines at risk to complete lists across all lanes. Conflicts show both events and their exact shared interval, with calendar links and a targeted Aegis review. Risk reviews show the cumulative capacity reason and offer task editing or Aegis planning. Deadline source is recorded as unknown, self-imposed, or external; legacy edits preserve it. Aegis asks about deadline ownership, negotiability and consequences before recommending changes. Rescheduling and delegation are discussed as options; external calendars or handoffs are not executed by this chat.
+
+## Commitment worksheet
+
+The **Across lanes** category identifies commitments affecting the whole workload; these remain visible under individual lane filters. Save keeps the worksheet open. Close, Escape, task switching and browser navigation protect unsaved commitment edits, unfinished work/output notes and uncopied email drafts. Work entries still use their own save controls. **Draft email update** prepares an editable recipient, subject and plain-text update from current worksheet values and saved work records, separating expected output from recorded work. Copy or download the `.eml` draft for review in a mail app; this action does not send email or save a provider-side draft.
