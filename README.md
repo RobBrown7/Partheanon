@@ -178,3 +178,7 @@ Overview and Schedule link Open commitments, Time conflicts, and Deadlines at ri
 ## Commitment worksheet
 
 The **Across lanes** category identifies commitments affecting the whole workload; these remain visible under individual lane filters. Save keeps the worksheet open. Close, Escape, task switching and browser navigation protect unsaved commitment edits, unfinished work/output notes and uncopied email drafts. Work entries still use their own save controls. **Draft email update** prepares an editable recipient, subject and plain-text update from current worksheet values and saved work records, separating expected output from recorded work. Copy or download the `.eml` draft for review in a mail app; this action does not send email or save a provider-side draft.
+
+## Internal email/calendar sync pause
+
+Settings → Accounts & updates includes **Internal email and calendar syncing**, off by default for the n8n migration. The saved preference pauses automatic page-load, five-minute, manual-refresh and source-verification reads for all built-in and additional Google/Microsoft accounts. `loadSource` enforces the pause on the server, including requests from older tabs. Existing connections, OAuth authorizations, provider configuration and cached snapshots are retained. Notion refresh and ordinary dashboard record reads continue. Re-enable the switch to restore internal provider reads. This pause does not implement or activate the planned n8n `/api/ingest` endpoint.

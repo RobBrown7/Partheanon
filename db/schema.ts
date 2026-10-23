@@ -14,7 +14,7 @@ export const sourceSnapshots = sqliteTable("source_snapshots", {
  updatedAt: text("updated_at").notNull()
 }, (t) => [primaryKey({columns: [t.owner,t.source]})]);
 export const preferences = sqliteTable("preferences", {
- owner: text("owner").primaryKey(),focusTaskId:text("focus_task_id"), startHour: integer("start_hour").notNull(), endHour: integer("end_hour").notNull(), theme:text("theme",{enum:["dark","light","system"]}).notNull().default("dark")
+ owner: text("owner").primaryKey(),internalMailCalendarSync:integer("internal_mail_calendar_sync",{mode:"boolean"}).notNull().default(false),focusTaskId:text("focus_task_id"), startHour: integer("start_hour").notNull(), endHour: integer("end_hour").notNull(), theme:text("theme",{enum:["dark","light","system"]}).notNull().default("dark")
 });
 export const accountConnections = sqliteTable("account_connections", {
  id:text("id").primaryKey(),owner:text("owner").notNull(),provider:text("provider",{enum:["google","microsoft","notion","apple"]}).notNull(),

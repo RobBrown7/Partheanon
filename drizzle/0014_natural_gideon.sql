@@ -1,0 +1,1 @@
+ALTER TABLE `preferences` ADD `internal_mail_calendar_sync` integer DEFAULT false NOT NULL;
