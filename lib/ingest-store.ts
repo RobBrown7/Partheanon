@@ -3,7 +3,7 @@ import {eq,and,count} from "drizzle-orm";
 import {getDb} from "../db";
 import {accountConnections,ingestKeys,ingestStreams,ingestRecords} from "../db/schema";
 import {allSourceInfo} from "./connections";
-import {IntakeError,parseIngest,mergeIngestSources} from "./ingest-contract.mjs";
+import {IntakeError,parseIngest,mergeIngestSources,ingestFingerprintInput} from "./ingest-contract.mjs";
 import {z} from "zod";
 
 export async function digest(value:string){return [...new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(value)))].map(v=>v.toString(16).padStart(2,"0")).join("");}
@@ -44,7 +44,9 @@ export async function acceptIngest(key:typeof ingestKeys.$inferSelect,input:unkn
  const rate=await db.prepare("UPDATE ingest_keys SET rate_count=CASE WHEN rate_window=? THEN rate_count+1 ELSE 1 END,rate_window=? WHERE id=? AND revoked=0 AND expires_at>? RETURNING rate_count").bind(window,window,key.id,new Date().toISOString()).first<{rate_count:number}>();
  if(!rate)throw new IntakeError(401,"unauthorized","Credential is no longer active.");
  if(rate.rate_count>60)throw new IntakeError(429,"rate_limited","Maximum 60 deliveries per minute per credential. Retry in one minute.");
- const streamId=await digest(JSON.stringify([key.owner,b.provider,b.account,b.resourceType,b.scope.containerId,b.testMode])),hash=await digest(JSON.stringify(b));
+ const identity=[key.owner,b.provider,b.account,b.resourceType,b.scope.containerId,b.testMode];
+ if('scopeIdentity' in b)identity.push(b.schemaVersion,b.scopeIdentity);
+ const streamId=await digest(JSON.stringify(identity)),hash=await digest(b.schemaVersion==='partheanon.sync.v1'?ingestFingerprintInput(input):JSON.stringify(b));
  const prior=await db.prepare("SELECT * FROM ingest_receipts WHERE stream_id=? AND batch_id=?").bind(streamId,b.batchId).first<any>();
  if(prior){if(prior.digest!==hash)throw new IntakeError(409,"batch_id_reused","This batchId was already used with different content.");return {ok:true,batchId:b.batchId,status:"duplicate",testMode:b.testMode,receivedAt:prior.received_at};}
  const stream=await db.prepare("SELECT generation,generated_at FROM ingest_streams WHERE id=?").bind(streamId).first<any>();

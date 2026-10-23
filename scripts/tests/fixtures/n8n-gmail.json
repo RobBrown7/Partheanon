@@ -1,0 +1,53 @@
+{
+  "schemaVersion": "partheanon.sync.v1",
+  "provider": "google",
+  "account": "pilot@example.com",
+  "syncMode": "incremental",
+  "deletions": [],
+  "scopeExits": [],
+  "coverage": {
+    "complete": true,
+    "authoritative": false,
+    "pagesFetched": 1,
+    "recordCount": 1,
+    "deletionCount": 0,
+    "scopeExitCount": 0,
+    "reconciliationRule": "Delta only. Absence implies nothing."
+  },
+  "generatedAt": "2026-10-23T18:30:00.000Z",
+  "producer": {
+    "name": "n8n-partheanon-pilot",
+    "version": "0.1.0"
+  },
+  "batchId": "gsync_fed46cca8513e9f60437adb5b92c934fc9a6e41e",
+  "resourceType": "email_message",
+  "container": {
+    "type": "mailbox",
+    "id": "all_mail"
+  },
+  "scope": {
+    "emailScope": "inbox",
+    "labelId": "INBOX",
+    "receivedAfter": "2026-10-16T00:00:00.000Z",
+    "alignment": "utc_day"
+  },
+  "records": [
+    {
+      "recordKey": "google|pilot@example.com|mailbox|all_mail|synthetic-mail-001",
+      "provider": "google",
+      "account": "pilot@example.com",
+      "containerType": "mailbox",
+      "containerId": "all_mail",
+      "sourceId": "synthetic-mail-001",
+      "messageId": "synthetic-mail-001",
+      "threadId": "synthetic-thread-001",
+      "senderAddress": "coordinator@example.com",
+      "subject": "Synthetic: review the project checklist",
+      "receivedAt": "2026-10-23T16:00:00.000Z",
+      "read": false,
+      "inScopeLabel": "INBOX",
+      "sourceVersion": "9876543210123456789",
+      "sourceUpdatedAt": "9876543210123456789"
+    }
+  ]
+}
