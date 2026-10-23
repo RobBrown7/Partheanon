@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "partheanon.sync.v1",
+  "provider": "google",
+  "account": "pilot@example.com",
+  "syncMode": "incremental",
+  "deletions": [],
+  "scopeExits": [],
+  "coverage": {
+    "complete": true,
+    "authoritative": false,
+    "pagesFetched": 2,
+    "recordCount": 0,
+    "deletionCount": 0,
+    "scopeExitCount": 0,
+    "reconciliationRule": "Delta only. Absence implies nothing."
+  },
+  "generatedAt": "2026-10-23T18:30:00.000Z",
+  "producer": {
+    "name": "n8n-partheanon-pilot",
+    "version": "0.1.0"
+  },
+  "batchId": "gsync_902c5bc59cfcb07463ce7c853e3168e981d1071b",
+  "resourceType": "email_message",
+  "container": {
+    "type": "mailbox",
+    "id": "all_mail"
+  },
+  "scope": {
+    "emailScope": "inbox",
+    "labelId": "INBOX",
+    "receivedAfter": "2026-10-16T00:00:00.000Z",
+    "alignment": "utc_day"
+  },
+  "records": []
+}

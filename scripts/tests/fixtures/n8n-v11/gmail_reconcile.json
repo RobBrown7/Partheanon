@@ -1,0 +1,53 @@
+{
+  "schemaVersion": "partheanon.sync.v1",
+  "provider": "google",
+  "account": "pilot@example.com",
+  "syncMode": "reconcile",
+  "deletions": [],
+  "scopeExits": [],
+  "coverage": {
+    "complete": true,
+    "authoritative": true,
+    "pagesFetched": 1,
+    "recordCount": 1,
+    "deletionCount": 0,
+    "scopeExitCount": 0,
+    "reconciliationRule": "Records for this account carrying scope.labelId and received after scope.receivedAfter that are absent from records are out of scope (hide; not deleted at source)."
+  },
+  "generatedAt": "2026-10-23T18:30:00.000Z",
+  "producer": {
+    "name": "n8n-partheanon-pilot",
+    "version": "0.1.0"
+  },
+  "batchId": "gsync_56c74c147fa9c61b427ad3be861c7cf51dcc440c",
+  "resourceType": "email_message",
+  "container": {
+    "type": "mailbox",
+    "id": "all_mail"
+  },
+  "scope": {
+    "emailScope": "inbox",
+    "labelId": "INBOX",
+    "receivedAfter": "2026-10-16T00:00:00.000Z",
+    "alignment": "utc_day"
+  },
+  "records": [
+    {
+      "recordKey": "google|pilot@example.com|mailbox|all_mail|synthetic-mail-001",
+      "provider": "google",
+      "account": "pilot@example.com",
+      "containerType": "mailbox",
+      "containerId": "all_mail",
+      "sourceId": "synthetic-mail-001",
+      "messageId": "synthetic-mail-001",
+      "threadId": "synthetic-thread-001",
+      "senderAddress": "coordinator@example.com",
+      "subject": "Synthetic: review the project checklist",
+      "receivedAt": "2026-10-23T16:00:00.000Z",
+      "read": true,
+      "inScopeLabel": "INBOX",
+      "sourceVersion": "9876543210123456790",
+      "sourceUpdatedAt": "9876543210123456790"
+    }
+  ]
+}

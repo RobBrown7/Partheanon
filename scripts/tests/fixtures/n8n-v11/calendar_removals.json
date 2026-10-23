@@ -1,0 +1,73 @@
+{
+  "schemaVersion": "partheanon.sync.v1",
+  "provider": "google",
+  "account": "pilot@example.com",
+  "syncMode": "incremental",
+  "deletions": [
+    {
+      "recordKey": "google|pilot@example.com|calendar|primary|synthetic-allday-series-001_20261025",
+      "sourceId": "synthetic-allday-series-001_20261025",
+      "kind": "cancelled",
+      "recurringEventId": "synthetic-allday-series-001",
+      "originalStartTime": {
+        "date": "2026-10-25"
+      },
+      "sourceUpdatedAt": null
+    },
+    {
+      "recordKey": "google|pilot@example.com|calendar|primary|synthetic-calendar-cancelled-001",
+      "sourceId": "synthetic-calendar-cancelled-001",
+      "kind": "cancelled",
+      "recurringEventId": null,
+      "originalStartTime": null,
+      "sourceUpdatedAt": "2026-10-23T17:15:00.000Z"
+    },
+    {
+      "recordKey": "google|pilot@example.com|calendar|primary|synthetic-series-001_20261024T170000Z",
+      "sourceId": "synthetic-series-001_20261024T170000Z",
+      "kind": "cancelled",
+      "recurringEventId": "synthetic-series-001",
+      "originalStartTime": {
+        "dateTime": "2026-10-24T10:00:00-07:00",
+        "timeZone": "America/Phoenix"
+      },
+      "sourceUpdatedAt": null
+    }
+  ],
+  "scopeExits": [
+    {
+      "recordKey": "google|pilot@example.com|calendar|primary|synthetic-calendar-moved-001",
+      "sourceId": "synthetic-calendar-moved-001",
+      "reason": "outside_window",
+      "sourceUpdatedAt": "2026-10-23T17:20:00.000Z"
+    }
+  ],
+  "coverage": {
+    "complete": true,
+    "authoritative": false,
+    "pagesFetched": 1,
+    "recordCount": 0,
+    "deletionCount": 3,
+    "scopeExitCount": 1,
+    "reconciliationRule": "Delta only. Absence implies nothing."
+  },
+  "generatedAt": "2026-10-23T18:30:00.000Z",
+  "producer": {
+    "name": "n8n-partheanon-pilot",
+    "version": "0.1.0"
+  },
+  "batchId": "gsync_1d7ac75d29e9e7f14158a21590cf4bc68dc50905",
+  "resourceType": "calendar_event",
+  "container": {
+    "type": "calendar",
+    "id": "primary"
+  },
+  "scope": {
+    "window": {
+      "start": "2026-10-16T00:00:00.000Z",
+      "end": "2026-12-23T00:00:00.000Z",
+      "alignment": "utc_day"
+    }
+  },
+  "records": []
+}

@@ -25,7 +25,7 @@ The Site service credential is separate from the account key. A workflow is not 
 - Content-Type: application/json
 - Body: one JSON object conforming exactly to the contract below; not an array of n8n items.
 - Return the full response and treat non-2xx responses as failures. Do not enable “ignore response code” and then advance the provider cursor regardless.
-- Maximum request size: 256 KiB; maximum 200 upserts and 200 explicit deletion markers per request. Reduce batch size for large/Unicode snippets.
+- Maximum request size: 1 MiB; maximum 200 upserts and 200 explicit deletion markers per request. Reduce batch size for large/Unicode snippets.
 - Maximum 60 deliveries/minute/key. A 429 includes Retry-After: 60.
 - Retry timeouts, 429 and 5xx with backoff, using the exact same payload and batchId. Save the payload before the first attempt. Do not regenerate timestamps or IDs on a retry.
 - A new logical delivery gets a fresh UUID batchId and generatedAt. Deliver a stream sequentially; reconcile before retrying an older batch after a newer delivery succeeded.
@@ -121,7 +121,7 @@ Errors have `{ "ok": false, "error": { "code": "...", "message": "..." } }`:
 - 401: invalid, expired or revoked intake credential.
 - 403: account/provider/container outside the key scope, or removed account.
 - 409: reused batch ID, stale batch, concurrency conflict or stream capacity.
-- 413: body exceeds 256 KiB.
+- 413: body exceeds 1 MiB.
 - 415: Content-Type is not application/json.
 - 422: invalid schema, ambiguous timestamps, duplicate IDs or future clocks.
 - 429: per-key rate limit.

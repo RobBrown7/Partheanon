@@ -113,6 +113,13 @@
       "when": 1792789178962,
       "tag": "0015_illegal_jackpot",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "6",
+      "when": 1792791097307,
+      "tag": "0016_conscious_ultimates",
+      "breakpoints": true
     }
   ]
 }

@@ -20,7 +20,7 @@ try:
  assert send(b)[0]==401
  assert send({**b,'account':'other@example.com'},key)[0]==403
  assert send({**b,'scope':{**b['scope'],'containerId':'not-permitted'}},key)[0]==403
- assert send(b,key,raw=b'x'*262145)[0]==413
+ assert send(b,key,raw=b'x'*1048577)[0]==413
  assert send({**b,'unexpected':'field'},key)[0]==422
  code,result=send(b,key);assert code==200,(code,result);assert result['status']=='accepted'
  assert send(b,key)[1]['status']=='duplicate'

@@ -53,13 +53,13 @@ try:
  for field,countfield in [('deletions','deletionCount'),('scopeExits','scopeExitCount')]:
   invalid=next_batch(mail);invalid[field]=[{'kind':'synthetic'}];invalid['coverage'][countfield]=1;assert send(invalid,issued['token'])[0]==422
  invalid=next_batch(mail);invalid['coverage']['authoritative']=True;assert send(invalid,issued['token'])[0]==422
- invalid=next_batch(batches[1]);invalid['records'][0]['sourceUpdatedAt']=None;assert send(invalid,issued['token'])[0]==422
+ invalid=next_batch(batches[1]);invalid['records'][0]['sourceUpdatedAt']=None;code,receipt=send(invalid,issued['token']);assert code==200 and receipt['deferred']==1
  empty=next_batch(mail);empty['records']=[];empty['coverage']['recordCount']=0;assert send(empty,issued['token'])[0]==200
  assert stored('synthetic-mail-001')['subject']=='New version','Empty delta must retain prior records'
  streams=[s for s in owner('/api/ingest-admin')['streams'] if s['account']==account]
  assert len(streams)==2 and all(not s['published'] for s in streams),'Delta alone must not establish initial coverage'
  assert all(s.get('account')!=account for s in owner('/api/state')['sources'].values())
- print('PASS: both actual worker envelopes durably committed; matching acknowledgments; timestamp/key-order replay; changed-content rejection; concurrent retries; precise Gmail version ordering; no-change retention; unverified removals/initial/null versions rejected; delta streams remain unpublished.')
+ print('PASS: both actual worker envelopes durably committed; matching acknowledgments; timestamp/key-order replay; changed-content rejection; concurrent retries; precise Gmail version ordering; no-change retention; malformed removals/mode rejected; null-version update durably deferred; delta streams remain unpublished.')
 finally:owner('/api/state',{'action':'removeConnection','id':cid})
 assert send(batches[0],issued['token'])[0]==401
 print('PASS: disposable account removed and credential revoked; no production data or workflows changed.')

@@ -1,10 +1,11 @@
 import {env} from "cloudflare:workers";
-import {eq,and,count} from "drizzle-orm";
+import {eq,and,count,desc} from "drizzle-orm";
 import {getDb} from "../db";
-import {accountConnections,ingestKeys,ingestStreams,ingestRecords} from "../db/schema";
+import {accountConnections,ingestKeys,ingestStreams,ingestRecords,ingestDeferred,ingestReceipts} from "../db/schema";
 import {allSourceInfo} from "./connections";
 import {IntakeError,parseIngest,mergeIngestSources,ingestFingerprintInput} from "./ingest-contract.mjs";
 import {z} from "zod";
+import {commitWorkerBatch} from "./ingest-worker-store";
 
 export async function digest(value:string){return [...new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(value)))].map(v=>v.toString(16).padStart(2,"0")).join("");}
 async function targets(owner:string){const connections=await getDb().select().from(accountConnections).where(eq(accountConnections.owner,owner));return Object.entries(allSourceInfo(connections)).filter(([,s])=>s.kind!=="notes").map(([sourceKey,s])=>({...s,sourceKey,provider:sourceKey==="google"||sourceKey==="gmail"||sourceKey.endsWith(":google")||sourceKey.endsWith(":gmail")?"google":"microsoft",resourceType:s.kind==="mail"?"email":"calendar"}));}
@@ -12,7 +13,9 @@ export async function ingestOverview(owner:string){
  const db=getDb();const keys=await db.select({id:ingestKeys.id,provider:ingestKeys.provider,account:ingestKeys.account,containers:ingestKeys.containers,createdAt:ingestKeys.createdAt,expiresAt:ingestKeys.expiresAt,revoked:ingestKeys.revoked}).from(ingestKeys).where(eq(ingestKeys.owner,owner));
  const streams=await db.select().from(ingestStreams).where(eq(ingestStreams.owner,owner));
  const counts=await db.select({streamId:ingestRecords.streamId,records:count()}).from(ingestRecords).where(and(eq(ingestRecords.owner,owner),eq(ingestRecords.deleted,false))).groupBy(ingestRecords.streamId);
- return {keys:keys.map(k=>({...k,containers:JSON.parse(k.containers)})),streams:streams.map(({generation,owner,...s})=>({...s,records:counts.find(c=>c.streamId===s.id)?.records||0})),accounts:[...new Map((await targets(owner)).map(t=>[`${t.provider}:${t.account}`,{provider:t.provider,account:t.account}])).values()],platformHeader:"OAI-Sites-Authorization",intakeHeader:"Authorization"};
+ const deferred=await db.select({streamId:ingestDeferred.streamId,batchId:ingestDeferred.batchId,recordId:ingestDeferred.recordId,kind:ingestDeferred.kind,reason:ingestDeferred.reason,createdAt:ingestDeferred.createdAt}).from(ingestDeferred).where(eq(ingestDeferred.owner,owner)).orderBy(desc(ingestDeferred.createdAt)).limit(50);
+ const receipts=await db.select({batchId:ingestReceipts.batchId,streamId:ingestReceipts.streamId,result:ingestReceipts.result,receivedAt:ingestReceipts.receivedAt}).from(ingestReceipts).innerJoin(ingestStreams,eq(ingestReceipts.streamId,ingestStreams.id)).where(eq(ingestStreams.owner,owner)).orderBy(desc(ingestReceipts.receivedAt)).limit(20);
+ return {deferred,receipts:receipts.map(r=>({...r,result:JSON.parse(r.result)})),keys:keys.map(k=>({...k,containers:JSON.parse(k.containers)})),streams:streams.map(({generation,owner,...s})=>({...s,records:counts.find(c=>c.streamId===s.id)?.records||0})),accounts:[...new Map((await targets(owner)).map(t=>[`${t.provider}:${t.account}`,{provider:t.provider,account:t.account}])).values()],platformHeader:"OAI-Sites-Authorization",intakeHeader:"Authorization"};
 }
 export async function issueIngestKey(owner:string,input:unknown){
  const ids=z.array(z.string().trim().min(1).max(512)).max(20);
@@ -45,8 +48,9 @@ export async function acceptIngest(key:typeof ingestKeys.$inferSelect,input:unkn
  if(!rate)throw new IntakeError(401,"unauthorized","Credential is no longer active.");
  if(rate.rate_count>60)throw new IntakeError(429,"rate_limited","Maximum 60 deliveries per minute per credential. Retry in one minute.");
  const identity=[key.owner,b.provider,b.account,b.resourceType,b.scope.containerId,b.testMode];
- if('scopeIdentity' in b)identity.push(b.schemaVersion,b.scopeIdentity);
+ if('scopeIdentity' in b)identity.push('worker-owned-v2',b.schemaVersion,b.scopeIdentity);
  const streamId=await digest(JSON.stringify(identity)),hash=await digest(b.schemaVersion==='partheanon.sync.v1'?ingestFingerprintInput(input):JSON.stringify(b));
+ if(b.schemaVersion==='partheanon.sync.v1')return commitWorkerBatch(db,key,b,input,target,streamId,hash);
  const prior=await db.prepare("SELECT * FROM ingest_receipts WHERE stream_id=? AND batch_id=?").bind(streamId,b.batchId).first<any>();
  if(prior){if(prior.digest!==hash)throw new IntakeError(409,"batch_id_reused","This batchId was already used with different content.");return {ok:true,batchId:b.batchId,status:"duplicate",testMode:b.testMode,receivedAt:prior.received_at};}
  const stream=await db.prepare("SELECT generation,generated_at FROM ingest_streams WHERE id=?").bind(streamId).first<any>();
@@ -78,4 +82,14 @@ export async function ingestSources(owner:string,legacy:Record<string,any>){
  return projected;
 }
 
-export async function removeIngestAccount(owner:string,provider:string,account:string){if(!env.DB)throw new Error("Storage unavailable");const db=env.DB,params=[owner,provider,account.toLowerCase()];await db.batch([db.prepare("DELETE FROM ingest_records WHERE stream_id IN(SELECT id FROM ingest_streams WHERE owner=? AND provider=? AND account=?)").bind(...params),db.prepare("DELETE FROM ingest_receipts WHERE stream_id IN(SELECT id FROM ingest_streams WHERE owner=? AND provider=? AND account=?)").bind(...params),db.prepare("DELETE FROM ingest_streams WHERE owner=? AND provider=? AND account=?").bind(...params),db.prepare("UPDATE ingest_keys SET revoked=1 WHERE owner=? AND provider=? AND account=?").bind(...params)]);}
+export async function removeIngestAccount(owner:string,provider:string,account:string){if(!env.DB)throw new Error("Storage unavailable");const db=env.DB,params=[owner,provider,account.toLowerCase()];await db.batch([db.prepare("DELETE FROM ingest_deferred WHERE stream_id IN(SELECT id FROM ingest_streams WHERE owner=? AND provider=? AND account=?)").bind(...params),db.prepare("DELETE FROM ingest_records WHERE stream_id IN(SELECT id FROM ingest_streams WHERE owner=? AND provider=? AND account=?)").bind(...params),db.prepare("DELETE FROM ingest_receipts WHERE stream_id IN(SELECT id FROM ingest_streams WHERE owner=? AND provider=? AND account=?)").bind(...params),db.prepare("DELETE FROM ingest_streams WHERE owner=? AND provider=? AND account=?").bind(...params),db.prepare("UPDATE ingest_keys SET revoked=1 WHERE owner=? AND provider=? AND account=?").bind(...params)]);}
+
+export async function lookupIngestReceipt(key:typeof ingestKeys.$inferSelect,batchId:string){
+ if(!/^gsync_[a-f0-9]{40}$/.test(batchId))throw new IntakeError(422,"invalid_batch_id","Use the worker's complete batch ID.");
+ if(!env.DB)throw new Error("Storage unavailable");
+ const rows=await env.DB.withSession("first-primary").prepare("SELECT r.result,s.resource_type,s.container_id FROM ingest_receipts r JOIN ingest_streams s ON s.id=r.stream_id WHERE s.owner=? AND s.provider=? AND s.account=? AND r.batch_id=? AND s.contract='partheanon.sync.v1'").bind(key.owner,key.provider,key.account,batchId).all<any>();
+ const containers=JSON.parse(key.containers),allowed=rows.results.filter(r=>containers[r.resource_type]?.includes(r.container_id));
+ if(!allowed.length)throw new IntakeError(404,"receipt_not_found","No committed receipt was found within this credential's scope. Absence is not proof that an in-flight request failed.");
+ if(allowed.length!==1)throw new IntakeError(409,"ambiguous_receipt","More than one scoped stream has this batch ID; use exact-envelope replay to resolve it.");
+ return JSON.parse(allowed[0].result);
+}

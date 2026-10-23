@@ -1,86 +1,122 @@
-# n8n → Partheanon: saved worker compatibility
+# n8n → Partheanon receiver: handoff v1.1
 
-## Status — October 23, 2026
+## Status and destination
 
-The actual sender is [worker jjRqawJGHl7gBDZc](https://athenaworx.app.n8n.cloud/workflow/jjRqawJGHl7gBDZc), node **Deliver Batch To Partheanon**. Its parent is [orchestrator DIUOAic0rr2fESrT](https://athenaworx.app.n8n.cloud/workflow/DIUOAic0rr2fESrT). The supplied handoff references Operating Record v1.8 and a 20-node worker graph. We have synthetic output examples, not a current inspection/export of that graph or a real delivered request.
+The wire schema remains `partheanon.sync.v1`; producer version remains `0.1.0`. The October 23 documentation revision does not change either field.
 
-**Keep the source schedule off and delivery at the authenticated mock.** The receiver now accepts the supplied nonempty and empty incremental Google examples. This is staged compatibility, not a production-ready cutover: initial/reconcile envelopes, authoritative coverage, nonempty deletions/scopeExits and calendar records with null sourceUpdatedAt are rejected with JSON 422 until their missing contracts and ordering rules are verified. The entire delivery is rejected; no receipt or record changes are committed for those cases. An incremental delivery cannot establish initial coverage or publish a new stream into the dashboard.
+POST `https://partheanon-forge.athena-works-8404.chatgpt.site/api/ingest`.
 
-Current mock: `https://athenaworx.app.n8n.cloud/webhook/partheanon-mock-ingest`.
+The receiver supports the ten supplied synthetic envelopes, additive initial/reconcile loads, typed explicit removals, conservative deferred evidence, durable full-envelope receipts and authenticated receipt lookup. All ten were exercised against local HTTP/D1 storage and dashboard readback. This is receiver verification, **not a delivery from the saved n8n worker to the real destination**. No live workflow, destination, schedule, provider data or mock cursor was changed. Keep the source schedule off and delivery at the authenticated mock until the supervised pilot below succeeds.
 
-Real destination, once the acceptance gate below passes:
+Worker: [jjRqawJGHl7gBDZc](https://athenaworx.app.n8n.cloud/workflow/jjRqawJGHl7gBDZc), node **Deliver Batch To Partheanon**. Parent: [DIUOAic0rr2fESrT](https://athenaworx.app.n8n.cloud/workflow/DIUOAic0rr2fESrT). Current mock: `https://athenaworx.app.n8n.cloud/webhook/partheanon-mock-ingest`.
 
-`https://partheanon-forge.athena-works-8404.chatgpt.site/api/ingest`
+Evidence: Rob supplied the consolidated v1.1 handoff and ten bodies from the saved worker, referencing Operating Record v1.8 and worker-export SHA-256 `35759d27ac634edf409efe98cd34c287d36a2f3d101e26281bc6601f068c9684`. This source graph/hash was not independently fetched. Checked-in [synthetic fixture bodies](../../scripts/tests/fixtures/n8n-v11) reproduce the supplied examples; none contains real source content or credentials.
 
-## Authentication and HTTP contract
+## Authentication, ownership and HTTP
 
-The Site stays owner-private. Each request requires two independent credentials:
+The Site remains owner-private. Two independent credentials are required:
 
-- `OAI-Sites-Authorization: Bearer <Site service-access credential>` — private hosting access, without browser identity or app consent.
-- `Authorization: Bearer <account-scoped intake key>` — application write authorization. Create/revoke it in Connections → n8n intake. Only its SHA-256 hash is stored; keys expire in 90 days.
+- `OAI-Sites-Authorization: Bearer <existing Site service-access credential>` — hosting access; no browser identity or app consent.
+- `Authorization: Bearer <account-scoped intake key>` — application write/read-receipt permission. Connections → n8n intake creates/revokes these. Only SHA-256 hashes are stored; keys expire after 90 days.
 
-Keys are bound to the signed-in owner, configured provider/account and explicit calendar/mailbox container IDs. The Google examples use calendar `primary` and mailbox `all_mail`; the email envelope separately declares an INBOX scope. Metadata cannot choose an owner, lane or dashboard source. Removing a configured account clears its intake state and revokes its keys.
+Use destination-specific n8n credential storage. Never use browser cookies or put secrets in URLs, Code/Set nodes, workflow exports, repository files or execution logs. Do not reuse the mock's credential. Service access alone cannot create application keys. Removing an account clears its intake streams, records, deferred evidence and receipts, and revokes its keys. Revocation alone stops future delivery but preserves existing records and receipts.
 
-Store both headers in destination-specific n8n credentials. Never put credentials in URLs, Code/Set nodes, workflow exports, chat, source, successful-execution payload logs or browser cookies. Do not reuse the mock credential. Keep n8n access authenticated and its execution retention limited.
+Application keys restrict provider, configured account, calendar and mailbox IDs. The pilot uses calendar `primary` and mailbox `all_mail`; that mailbox alias permits only the supported INBOX scope, not whole-mailbox reconciliation. Owner and lane come from server-owned Connections. A separate receiver-owned namespace isolates v1.1 streams from the earlier unpublished compatibility streams and numeric-schema harness. Destination databases isolate local and hosted data. Key rotation does not reset a stream.
 
-Use POST and Content-Type application/json, plus:
+Required nonsecret headers:
 
-- `Idempotency-Key`: exact body batchId.
-- `X-Partheanon-Schema`: `partheanon.sync.v1`.
-
-Both headers are required and must match. Limit each request to 256 KiB and 200 upserts; rate limit is 60 deliveries/minute/key. HTTP 429 includes Retry-After: 60. Account/container mismatch returns 403, invalid/expired/revoked application credential 401, schema or unverified semantics 422, reused batch ID/stale delivery/concurrency/capacity conflict 409, storage failure 503. Hosting denial may instead be 403 or a login redirect; HTML is never an acknowledgment.
-
-## Exact supplied payloads
-
-The checked-in **synthetic** fixtures reproduce the handoff's two separate POST bodies:
-
-- [Gmail incremental envelope](../../scripts/tests/fixtures/n8n-gmail.json)
-- [Calendar incremental envelope](../../scripts/tests/fixtures/n8n-calendar.json)
-
-Send one resource/cursor envelope per request. Do not combine examples or include ingest_url, result_base, provider cursors or n8n item wrappers. The body has the sender's 14 top-level fields: schemaVersion, batchId, provider, account, resourceType, syncMode, container, scope, records, deletions, scopeExits, coverage, generatedAt, producer. The receiver validates strict fields, matching record/envelope identities and canonical recordKeys, counts, UTC-day scope boundaries, source timestamps and calendar time zones. Unknown content/body/attachment fields are rejected. Source text remains inert display content.
-
-`schemaVersion` is the string `partheanon.sync.v1`; batch IDs are `gsync_` plus 40 lowercase hex characters. Resource types are email_message/calendar_event. Only the supplied Google incremental contract is enabled at this stage. The older numeric schema is documented separately in [the legacy test-harness contract](n8n-legacy-intake.md); it is not the worker's production format. Do not add its testMode field to the saved worker body.
-
-Gmail messageId is the Gmail provider ID, not RFC Message-ID. History IDs remain strings, including the 19-digit synthetic value. The payload retains them exactly; the storage comparison key uses decimal-string length and digits without Number conversion. Unrecognized nondecimal history versions fail closed. Email display receives sender, subject, received time and read state, without fabricated snippet, source link, body or attachment content.
-
-Calendar sourceUpdatedAt is a timestamp. Null values are part of the sender's possible output but are currently rejected until a safe ordering rule exists; generatedAt is not a substitute for a source version. Timed boundaries preserve their offsets; all-day date boundaries are resolved in their named time zone, including daylight-saving changes. Availability is preserved. Cancellation/removal semantics still require examples.
-
-## Receipts and replay
-
-New deliveries return HTTP 200 only after a successful atomic D1 commit of stream generation, record changes and durable receipt:
-
-```json
-{"ok":true,"batchId":"gsync_fed46cca8513e9f60437adb5b92c934fc9a6e41e","status":"accepted"}
+```text
+Content-Type: application/json
+Idempotency-Key: <exact body batchId>
+X-Partheanon-Schema: partheanon.sync.v1
 ```
 
-Additional fields may include receivedAt/counts. Retries return status duplicate with the exact incoming batchId. This matches the sender's accepted/duplicate acknowledgment requirement. A bare success, wrong ID, HTML or another status must not advance a cursor.
+One complete resource envelope per POST, with the fourteen fields supplied in the handoff. No mixed resources, wrapper objects, ingest_url, result_base or provider cursor fields. The worker aggregates pages; **do not split an authoritative envelope into independently accepted pages**.
 
-For this worker schema, the SHA-256 fingerprint covers the whole validated incoming envelope **except top-level generatedAt**, with recursively sorted object keys and preserved array order/string values. A regenerated generatedAt or reordered object keys therefore returns duplicate; changing subject, coverage, versions, scope or other content under the same batch ID returns 409. generatedAt must still pass timestamp validation. Receipts persist; replays do not apply data again.
+Limits: 1 MiB streamed UTF-8 JSON; up to 400 Gmail upserts or 2,000 Calendar upserts, up to 2,000 entries per removal array, 5,000 combined entries, coverage pagesFetched ≤20. Resource limits can reject a sender scan that is too large; reduce its configured scope before retrying, never truncate it into a falsely complete scan. The larger byte bound accommodates 400 metadata records, including Unicode subjects. Streams retain at most 5,000 record identities and 5,000 deferred entries. Rate limit is 60 POSTs/minute/key, with Retry-After: 60 on HTTP 429.
 
-Streams are separated by owner/provider/account/resource/container and exact declared scope, independently of credentials. Changing a key does not create a new destination baseline. Calendar and Gmail streams are separate. Earlier newly generated deliveries are rejected after a newer stream delivery. Provider versions prevent stale updates overwriting newer records. Concurrent identical deliveries yield accepted/duplicate, or a retryable failure if a storage conflict prevents completion. No successful acknowledgment is issued on an uncertain commit.
+Strict validation covers identities, recordKeys, all array counts, mode/authoritative consistency, complete=true, UTC-day bounds, minimal field allowlists, timestamp validity and duplicate IDs across all three arrays. A malformed/incomplete batch receives no successful receipt and applies no records. Full Gmail scans cannot supply history deletions or generic out_of_scope exits; full Calendar scans cannot supply scope exits, matching the supplied worker paths.
 
-`coverage.complete:true` on a delta means that delta was collected successfully, not that the destination received an initial authoritative baseline. Staged worker streams therefore remain unpublished. Empty deltas are accepted and retain existing records. Absence never triggers a deletion in this implementation.
+## Additive baseline, rolling scope and legacy rows
 
-## Missing evidence and cutover gate
+Incremental-only streams stay unpublished. A complete initial or reconcile envelope establishes an **additive** baseline and publishes accepted records. Missing records are retained: **absence pruning is disabled for all modes, including complete empty authoritative reconciliation**. A receiver CAS serializes commits, but cannot prove when a provider scan began. Neither generatedAt nor a batch hash is a source snapshot barrier. A delayed full scan therefore has no authority to hide newer or absent records.
 
-Before switching any real delivery:
+The stable stream identity includes destination database, owner, provider, account, resource, container and logical scope membership (INBOX/alignment). Rolling receipt/calendar boundaries are stored in stream state rather than creating a new stream daily. Older generatedAt values cannot regress the display window; advancing bounds are monotonic. Aged-out rows are reversibly hidden by the retained display window, remain stored, and may reappear with a valid newer update/window. They are never reclassified as provider-deleted merely because they aged out.
 
-1. Obtain synthetic initial/reconcile envelopes and the exact shapes of deletions[] and scopeExits[], including their record identity and source-ordering fields. Confirm the producer's bounded authoritative reconciliation rules, full-scan/partial-page behavior, scope identity across rolling windows and null calendar-version handling.
-2. Implement and test those semantics. Source deletion/cancellation tombstones must remain distinct from leaving INBOX or moving out of the retained window; scope exits must permit legitimate re-entry and must never delete provider data. Failed/partial listings must never infer removals.
-3. Create a real-destination credential and independent destination/account/resource/scope state. **Do not reuse mock-advanced cursors.** A bounded initial load must establish the real baseline.
-4. Run a supervised synthetic manual delivery from the actual saved worker to the real destination with a disposable configured account. Verify exact acknowledgment and durable readback, replay, update, deletion/cancellation, scope exit/re-entry, empty delta, malformed/bad-credential rejection and interrupted initial-load recovery. Do not send synthetic data into a real account's dashboard stream.
-5. Run the reviewed bounded initial real-account load, confirm coverage and entries in Partheanon, then separately enable the schedule.
+Unmapped legacy cache items remain stored **and visible** alongside the new import. They are not adopted or deduplicated by title, sender, thread ID or iCalUID. This can show duplicates until a deliberate account/container/source-ID ownership map is reviewed. User-created commitments, tasks, work logs and provider data remain outside reconciliation authority. Numeric-schema test-harness streams keep their original behavior; see [the legacy contract](n8n-legacy-intake.md).
 
-No real workflow, provider data, schedule, destination, cursor or production intake record was changed during local compatibility testing. No production application key has been created by these tests. Existing internal email/calendar syncing remains off; Notion refresh is separate. The receiver cannot send mail or alter provider calendars, tasks or source records.
+Calendar coverage remains provisional because absence pruning and legacy migration are unresolved; Aegis must not present that time as confirmed availability. Connections reports pending evidence and recent receipts. Source status notes explain retained legacy rows and provisional coverage.
 
-## Verified locally
+## Versions, removals and deferred evidence
+
+Gmail messageId is the Gmail provider ID. History IDs are kept exactly as strings. Ordering uses decimal-string length/digits without Number conversion. Unsupported nondecimal versions are rejected. Calendar known timestamps normalize to UTC for comparison. A newer known version can update or restore its exact imported record. Older versions are ignored with a stale count. Equal-version identical data is unchanged; conflicting state/content is durably deferred instead of using arrival order to guess a winner.
+
+States are reversible local markers, recorded with reason and evidence batch:
+
+| Input | State/effect |
+| --- | --- |
+| Gmail deletions, kind deleted_at_source | source_deleted, exact imported ID only, when version ordering is known |
+| Calendar deletions, kind cancelled | cancelled, exact occurrence/sourceId only, when version ordering is known |
+| Gmail scopeExits | scope_exit with the supplied reason; never source deletion |
+| Calendar outside_window exit | scope_exit only with a known newer version and a previously owned timed-event shape |
+| Valid newer record after a hidden state | active; restores that one scope membership |
+
+All six Gmail reasons are preserved: out_of_scope, left_scope, source_not_found, outside_window, spam, trashed. Generic exclusion or a 404 is never promoted to explicit source deletion. Unknown IDs with known ordering may receive bounded local evidence/tombstones; no wider legacy/source search is performed. A series ID/iCalUID never broadens a cancellation beyond its exact supplied sourceId.
+
+Sparse cancellations need no title/start/end. Timed originalStartTime and date-only all-day originalStartTime are preserved exactly in durable envelopes/evidence. A null sourceUpdatedAt is **not replaced with generatedAt**. Null-version records and removals are retained as deferred candidates and do not alter an existing record or fabricate a tombstone. Thus A4's sparse occurrence cancellation and A8's two null-version occurrences remain pending. This intentionally does not claim that every cancellation was applied.
+
+Known-version Calendar outside_window exits are also deferred for unknown/all-day prior shapes. All-day record boundaries use their named timezone, including DST; ambiguous all-day records at the window boundary are deferred. No all-day absence inference runs. Gmail exactly-at-cutoff rows are retained because absence never prunes; an explicit receipt-window exit that disagrees with the previously owned receivedAt is deferred too.
+
+Deferred evidence is durable, visible in Connections (latest 50), and counts toward a bounded stream quota. This release has no automatic adjudicator or apply-pending control: a missing/ambiguous version must be resolved through reviewed receiver/sender evidence or an explicit future resolution feature. A later known source update does not silently erase the historical deferred evidence. Coverage remains provisional. Raw minimal accepted envelopes and receipts remain until the account is removed; no automatic retention purge currently runs.
+
+Imported sender/subject/title text is rendered through escaped React text; no source links, HTML, Markdown actions or automatic fetches are added. Intake never fetches fuller email/event content and cannot send mail or alter provider calendars. Aegis receives source records as untrusted planning context, not privileged instructions.
+
+## Durable acknowledgment and replay recovery
+
+Atomic D1 acceptance commits stream CAS/generation, ordered record effects, deferred evidence, full validated envelope and receipt together. No successful acknowledgment is sent until that commit completes. Acceptance means **safely received under this conservative policy**, not that every proposed removal was applied. The sender/operator must agree to this distinction before cutover.
+
+Example response (counts depend on the envelope):
+
+```json
+{"ok":true,"batchId":"gsync_35d35c799697ba99735ef78a494e4f0d6ff34402","status":"accepted","applied":1,"deferred":1,"absencePruning":"disabled","coverage":"provisional"}
+```
+
+Additional fields include unchanged/stale counts, receivedAt, sequence, published, baseline and receiptDigest. The exact batchId/status accepted or duplicate satisfy the existing sender check. An HTTP success without matching JSON must never advance a source cursor.
+
+The SHA-256 replay fingerprint covers the complete validated logical envelope except top-level generatedAt. Object keys are recursively sorted; string values and array order remain significant. Regenerated generatedAt and object-key reordering are compatible. Changed record text, source versions, scope, coverage, producer or any other stable field under the same batchId returns 409. The reduced sender batch hash alone is not treated as payload equality. Compatible replays return the original receipt details with status duplicate and do not reapply evidence or increase counts. Timestamps still must validate.
+
+For a response-lost outcome, use exact-envelope replay or authenticated lookup with the same two credentials:
+
+```text
+GET /api/ingest?batchId=<complete gsync_ batch ID>
+```
+
+Lookup returns the committed receipt/status/counts/digest only; it never exposes the stored envelope or key. Account/container authorization is enforced again. HTTP 404 means no scoped committed receipt was found, not proof that an in-flight request failed. A hash can be compared against the canonical logical envelope when recovering a conflicted sender state. Do not advance a cursor on receipt mismatch, 404 or a lookup timeout. Preserve the minimal pending logical envelope securely until matching acceptance; a fresh provider read need not reproduce it.
+
+Errors: 401 invalid/expired/revoked application key; 403 scope/account removed; 404 missing scoped receipt; 409 reused batch ID/concurrency/capacity/ambiguous lookup; 413 byte budget; 415 media type; 422 invalid contract/incomplete scan; 429 rate limit; 503 uncommitted/uncertain storage failure. Private hosting may instead return a denial/login redirect. HTML is not an acknowledgment. Concurrent losers retry the same logical envelope and replan against the new stored versions.
+
+## Supervised real-destination pilot — still outstanding
+
+1. Leave the source schedule off and preserve the mock destination, credentials, cursors and receipts. Do not switch the production worker URL alone.
+2. Review this acceptance policy: additive baseline, no absence pruning, deferred ambiguous versions, provisional coverage and retained legacy rows. Configure two destination-specific credentials in n8n; no secrets in chat.
+3. Create separate **real-destination** cursor/pending-envelope/idempotency state keyed by environment + endpoint + authorized import/account + resource + container + logical scope. Do not reuse mock-advanced cursors, erase the mock state or clear Command Center records.
+4. Use a dedicated manual test route with synthetic payload identities matching a disposable configured account and its restricted key. Verify a real HTTP accepted response, receipt lookup, dashboard readback, compatible duplicate, changed-content rejection, invalid-key/container rejection, known-version update, exact cancellation, scope exit/re-entry, null-version deferral and empty delta/full retention. Replay and lookup must recover an intentionally interrupted/lost response. The ten fixture identities alone are not an authorized real account.
+5. For the first real account, start a fresh bounded initial load (Gmail INBOX from the approved cutoff; Calendar from the approved window), serially for that destination. Check actual stored/displayed rows, review counts, receipts and legacy duplicates. Keep internal Partheanon provider syncing off (enforced server-side); Notion remains separate.
+6. Confirm the baseline and manual incremental/no-change cycle before separately enabling a source schedule. Automatic absence pruning requires a separate snapshot/barrier protocol and reviewed ownership/timezone/cutoff rules; it is not enabled by this pilot.
+
+Copy-ready [receiver return handoff](n8n-receiver-return-v1.1.md) summarizes what the n8n assistant should configure and what remains unverified.
+
+## Local verification
 
 ```sh
-node --test lib/ingest-contract.test.mjs lib/ingest-worker-contract.test.mjs lib/sync-policy.test.mjs
+node --test lib/ingest-contract.test.mjs lib/ingest-worker-contract.test.mjs lib/ingest-worker-plan.test.mjs lib/sync-policy.test.mjs
+python3 scripts/tests/ingest-v11-integration.py
 python3 scripts/tests/ingest-worker-integration.py
 python3 scripts/tests/ingest-integration.py
 python3 scripts/tests/ingest-projection.py
 npx tsc --noEmit
 ```
 
-The Python scripts are localhost-only; do not retarget them to production. They use disposable synthetic account data, revoke their keys and verify isolation/readback. The worker test exercises the actual fixture bodies, exact acknowledgment, regenerated-timestamp replay, changed-content conflict, concurrent retries, 19/20-digit version ordering, no-change retention and rejection of unverified semantics. The read-only hosted access probe separately verifies private hosting and JSON rejection of an invalid application key; it is not an n8n end-to-end test.
+The Python scripts are localhost-only and use disposable synthetic data/keys. The v1.1 test delivers all ten bodies separately, verifies full-envelope/receipt persistence and authenticated lookup, expected seven deferred entries across the supplied fixtures, initial dashboard projection, source-version protection, typed removals, re-entry, rolling-scope continuity, and credential isolation. Regression tests cover concurrency, replay conflicts, size bounds and key revocation. A read-only hosted probe verifies hosting denial and invalid application-key rejection, without inserting records.
+
+Official semantics checked while implementing: [Gmail history versions](https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.history/list), [Calendar cancellation resource](https://developers.google.com/workspace/calendar/api/v3/reference/events), [Calendar overlap query bounds](https://developers.google.com/workspace/calendar/api/v3/reference/events/list), [Calendar/all-day timezone rules](https://developers.google.com/workspace/calendar/api/concepts/events-calendars#time_zones). These provider references do not establish an atomic sender snapshot or resolve the documented sender boundary discrepancies.

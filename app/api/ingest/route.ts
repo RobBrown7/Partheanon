@@ -1,5 +1,7 @@
-import {authenticateIngest,acceptIngest} from "../../../lib/ingest-store";
+import {authenticateIngest,acceptIngest,lookupIngestReceipt} from "../../../lib/ingest-store";
 import {readIngestJson,IntakeError,validateIngestHeaders} from "../../../lib/ingest-contract.mjs";
 export const dynamic="force-dynamic";
 const headers={"Cache-Control":"private, no-store","X-Content-Type-Options":"nosniff"};
 export async function POST(request:Request){try{const key=await authenticateIngest(request);const input=await readIngestJson(request);validateIngestHeaders(request,input);const result=await acceptIngest(key,input);return Response.json(result,{headers});}catch(e){if(e instanceof IntakeError)return Response.json({ok:false,error:{code:e.code,message:e.message}},{status:e.status,headers:{...headers,...(e.status===429?{"Retry-After":"60"}:{})}});return Response.json({ok:false,error:{code:"intake_unavailable",message:"Delivery could not be committed. Retry the exact batch; no successful acknowledgment was issued."}},{status:503,headers});}}
+
+export async function GET(request:Request){try{const key=await authenticateIngest(request);return Response.json(await lookupIngestReceipt(key,new URL(request.url).searchParams.get("batchId")||""),{headers});}catch(e){if(e instanceof IntakeError)return Response.json({ok:false,error:{code:e.code,message:e.message}},{status:e.status,headers});return Response.json({ok:false,error:{code:"intake_unavailable",message:"Receipt lookup is unavailable. Retry later."}},{status:503,headers});}}

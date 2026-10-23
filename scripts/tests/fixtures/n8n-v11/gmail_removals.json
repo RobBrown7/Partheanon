@@ -1,0 +1,79 @@
+{
+  "schemaVersion": "partheanon.sync.v1",
+  "provider": "google",
+  "account": "pilot@example.com",
+  "syncMode": "incremental",
+  "deletions": [
+    {
+      "recordKey": "google|pilot@example.com|mailbox|all_mail|synthetic-mail-deleted-001",
+      "sourceId": "synthetic-mail-deleted-001",
+      "kind": "deleted_at_source",
+      "sourceUpdatedAt": null
+    }
+  ],
+  "scopeExits": [
+    {
+      "recordKey": "google|pilot@example.com|mailbox|all_mail|synthetic-mail-gated-001",
+      "sourceId": "synthetic-mail-gated-001",
+      "reason": "out_of_scope",
+      "sourceUpdatedAt": null
+    },
+    {
+      "recordKey": "google|pilot@example.com|mailbox|all_mail|synthetic-mail-left-001",
+      "sourceId": "synthetic-mail-left-001",
+      "reason": "left_scope",
+      "sourceUpdatedAt": "9876543210123456789"
+    },
+    {
+      "recordKey": "google|pilot@example.com|mailbox|all_mail|synthetic-mail-missing-001",
+      "sourceId": "synthetic-mail-missing-001",
+      "reason": "source_not_found",
+      "sourceUpdatedAt": null
+    },
+    {
+      "recordKey": "google|pilot@example.com|mailbox|all_mail|synthetic-mail-old-001",
+      "sourceId": "synthetic-mail-old-001",
+      "reason": "outside_window",
+      "sourceUpdatedAt": "9876543210123456789"
+    },
+    {
+      "recordKey": "google|pilot@example.com|mailbox|all_mail|synthetic-mail-spam-001",
+      "sourceId": "synthetic-mail-spam-001",
+      "reason": "spam",
+      "sourceUpdatedAt": "9876543210123456789"
+    },
+    {
+      "recordKey": "google|pilot@example.com|mailbox|all_mail|synthetic-mail-trash-001",
+      "sourceId": "synthetic-mail-trash-001",
+      "reason": "trashed",
+      "sourceUpdatedAt": "9876543210123456789"
+    }
+  ],
+  "coverage": {
+    "complete": true,
+    "authoritative": false,
+    "pagesFetched": 2,
+    "recordCount": 0,
+    "deletionCount": 1,
+    "scopeExitCount": 6,
+    "reconciliationRule": "Delta only. Absence implies nothing."
+  },
+  "generatedAt": "2026-10-23T18:30:00.000Z",
+  "producer": {
+    "name": "n8n-partheanon-pilot",
+    "version": "0.1.0"
+  },
+  "batchId": "gsync_e0cfcaca64983f5b1c87d4b246a47144625b7472",
+  "resourceType": "email_message",
+  "container": {
+    "type": "mailbox",
+    "id": "all_mail"
+  },
+  "scope": {
+    "emailScope": "inbox",
+    "labelId": "INBOX",
+    "receivedAfter": "2026-10-16T00:00:00.000Z",
+    "alignment": "utc_day"
+  },
+  "records": []
+}

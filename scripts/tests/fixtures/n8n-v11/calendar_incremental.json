@@ -1,0 +1,67 @@
+{
+  "schemaVersion": "partheanon.sync.v1",
+  "provider": "google",
+  "account": "pilot@example.com",
+  "syncMode": "incremental",
+  "deletions": [],
+  "scopeExits": [],
+  "coverage": {
+    "complete": true,
+    "authoritative": false,
+    "pagesFetched": 1,
+    "recordCount": 1,
+    "deletionCount": 0,
+    "scopeExitCount": 0,
+    "reconciliationRule": "Delta only. Absence implies nothing."
+  },
+  "generatedAt": "2026-10-23T18:30:00.000Z",
+  "producer": {
+    "name": "n8n-partheanon-pilot",
+    "version": "0.1.0"
+  },
+  "batchId": "gsync_29776cbe618512fb7135913c54e76bc5afdc7ed7",
+  "resourceType": "calendar_event",
+  "container": {
+    "type": "calendar",
+    "id": "primary"
+  },
+  "scope": {
+    "window": {
+      "start": "2026-10-16T00:00:00.000Z",
+      "end": "2026-12-23T00:00:00.000Z",
+      "alignment": "utc_day"
+    }
+  },
+  "records": [
+    {
+      "recordKey": "google|pilot@example.com|calendar|primary|synthetic-calendar-001",
+      "provider": "google",
+      "account": "pilot@example.com",
+      "containerType": "calendar",
+      "containerId": "primary",
+      "sourceId": "synthetic-calendar-001",
+      "iCalUID": "synthetic-calendar-001@example.com",
+      "title": "Synthetic: project review",
+      "start": {
+        "dateTime": "2026-10-24T10:00:00-07:00",
+        "date": null,
+        "timeZone": "America/Phoenix"
+      },
+      "end": {
+        "dateTime": "2026-10-24T10:30:00-07:00",
+        "date": null,
+        "timeZone": "America/Phoenix"
+      },
+      "allDay": false,
+      "busyFree": "busy",
+      "status": "confirmed",
+      "cancelled": false,
+      "eventType": "default",
+      "visibility": "default",
+      "recurringEventId": null,
+      "originalStartTime": null,
+      "isRecurringInstance": false,
+      "sourceUpdatedAt": "2026-10-23T17:00:00.000Z"
+    }
+  ]
+}

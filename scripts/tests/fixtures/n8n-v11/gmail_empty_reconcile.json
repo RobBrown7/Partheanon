@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "partheanon.sync.v1",
+  "provider": "google",
+  "account": "pilot@example.com",
+  "syncMode": "reconcile",
+  "deletions": [],
+  "scopeExits": [],
+  "coverage": {
+    "complete": true,
+    "authoritative": true,
+    "pagesFetched": 1,
+    "recordCount": 0,
+    "deletionCount": 0,
+    "scopeExitCount": 0,
+    "reconciliationRule": "Records for this account carrying scope.labelId and received after scope.receivedAfter that are absent from records are out of scope (hide; not deleted at source)."
+  },
+  "generatedAt": "2026-10-23T18:30:00.000Z",
+  "producer": {
+    "name": "n8n-partheanon-pilot",
+    "version": "0.1.0"
+  },
+  "batchId": "gsync_88cd1af3ec47cd56809fe38684b22a6fba9c6a8b",
+  "resourceType": "email_message",
+  "container": {
+    "type": "mailbox",
+    "id": "all_mail"
+  },
+  "scope": {
+    "emailScope": "inbox",
+    "labelId": "INBOX",
+    "receivedAfter": "2026-10-16T00:00:00.000Z",
+    "alignment": "utc_day"
+  },
+  "records": []
+}
