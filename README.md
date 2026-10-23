@@ -182,3 +182,7 @@ The **Across lanes** category identifies commitments affecting the whole workloa
 ## Internal email/calendar sync pause
 
 Settings → Accounts & updates includes **Internal email and calendar syncing**, off by default for the n8n migration. The saved preference pauses automatic page-load, five-minute, manual-refresh and source-verification reads for all built-in and additional Google/Microsoft accounts. `loadSource` enforces the pause on the server, including requests from older tabs. Existing connections, OAuth authorizations, provider configuration and cached snapshots are retained. Notion refresh and ordinary dashboard record reads continue. Re-enable the switch to restore internal provider reads. This pause does not implement or activate the planned n8n `/api/ingest` endpoint.
+
+## n8n intake
+
+See [the intake contract and operator handoff](docs/integrations/n8n-intake.md). `/api/ingest` accepts bounded, account-scoped email/calendar metadata batches behind private Site service access and a separate revocable intake key. Connections → n8n intake manages key scope and received-stream status. Keys are stored as hashes and expire after 90 days. Retries are idempotent; old record versions, account mismatches and incomplete initial syncs are guarded. Test streams stay outside live views. Internal provider syncing remains paused. An actual n8n run and both credentials must be verified before claiming end-to-end operation.
