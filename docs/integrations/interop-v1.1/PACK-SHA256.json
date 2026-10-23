@@ -1,0 +1,16 @@
+{
+  "README.md": "0ad707d447bf1c0db337d0be5576b280992f64446f90a021adcff9a75e9743f0",
+  "accepted.example.json": "a8f4fe21f5bbb451ccf73c11eb5728b1bb75d0f5a870fb50301e1c8687f92315",
+  "array-reordered.json": "650d6df7a1ed07cc0428c1c4e014b3dcd7d6a658ec1d38332b23a7a33f836bb0",
+  "canonical-envelope.txt": "faac0587c06150404e43c5db632378a6178fb6da539d181f3dfb57c8c358e852",
+  "canonicalize.mjs": "b7c2f53a3e6cd527e87408af1c49d72079000c2290e41d910f105662a9b244d4",
+  "deferred-removal.json": "27afff962d909c384669f308ec667d7a3ce509e0bd86e01451655f524e985a2b",
+  "duplicate.example.json": "a140b84238e014f40613dce2039c2a78ca0285c6b4b62e1a4e18718323e11688",
+  "envelope.json": "d26985faf21553dd6210a40e7e2fdf75b38c43ed6854660183e0e14b8d71e402",
+  "generated-at-changed.json": "3162a60a3c0a159b7ddddb98b299b093704362d4fac21d0c19e63bcc19d61b02",
+  "lookup.example.json": "a8f4fe21f5bbb451ccf73c11eb5728b1bb75d0f5a870fb50301e1c8687f92315",
+  "object-keys-reordered.json": "19f94cad6033c24ad49506e1c44c88e27e068798ff60125783b654bf85f67af2",
+  "stable-value-changed.json": "4eeabbb57bb1fcdf92091ab1f15e67f7a94bb0f24092a2929fbdc83478f2051f",
+  "vectors.json": "cf4a43d12742cc0ab01d42bddae0cacc3495989a5dd53d3425f67558bccc7db4",
+  "verify.mjs": "02b04d6f8b146bb6c7df5f64c23726af04a0ce0431ec75294c412b5f57290da7"
+}

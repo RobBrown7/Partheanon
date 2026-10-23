@@ -1,0 +1,65 @@
+{
+  "algorithm": "SHA-256",
+  "encoding": "UTF-8",
+  "hex": "lowercase",
+  "receiverSourceCommit": "5b9398dacb454be239d78cbdc5555975aab3457d",
+  "receiverGithubCommit": "353fd1f8788016933ffec3a051bc65fbf6009463",
+  "baseDigest": "faac0587c06150404e43c5db632378a6178fb6da539d181f3dfb57c8c358e852",
+  "vectors": [
+    {
+      "name": "base",
+      "file": "envelope.json",
+      "receiptDigest": "faac0587c06150404e43c5db632378a6178fb6da539d181f3dfb57c8c358e852",
+      "sameAsBase": true,
+      "postAfterBase": {
+        "http": 200,
+        "status": "duplicate",
+        "error": null
+      }
+    },
+    {
+      "name": "object_keys_reordered",
+      "file": "object-keys-reordered.json",
+      "receiptDigest": "faac0587c06150404e43c5db632378a6178fb6da539d181f3dfb57c8c358e852",
+      "sameAsBase": true,
+      "postAfterBase": {
+        "http": 200,
+        "status": "duplicate",
+        "error": null
+      }
+    },
+    {
+      "name": "generatedAt_changed",
+      "file": "generated-at-changed.json",
+      "receiptDigest": "faac0587c06150404e43c5db632378a6178fb6da539d181f3dfb57c8c358e852",
+      "sameAsBase": true,
+      "postAfterBase": {
+        "http": 200,
+        "status": "duplicate",
+        "error": null
+      }
+    },
+    {
+      "name": "array_reordered",
+      "file": "array-reordered.json",
+      "receiptDigest": "0e47306e2d630fc46422be9476299fd79215cda148c6c945d4777dcd38eab8db",
+      "sameAsBase": false,
+      "postAfterBase": {
+        "http": 409,
+        "status": null,
+        "error": "batch_id_reused"
+      }
+    },
+    {
+      "name": "stable_value_changed",
+      "file": "stable-value-changed.json",
+      "receiptDigest": "845460e6f10532a0bda97b7409b795f46a22ccbc6807b64e4a0a2a973a50b6e8",
+      "sameAsBase": false,
+      "postAfterBase": {
+        "http": 409,
+        "status": null,
+        "error": "batch_id_reused"
+      }
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "records": [
+    {
+      "sourceUpdatedAt": "9876543210123456789",
+      "sourceVersion": "9876543210123456789",
+      "inScopeLabel": "INBOX",
+      "read": false,
+      "receivedAt": "2026-10-23T16:00:00.000Z",
+      "subject": "Synthetic: checklist <review> & café",
+      "senderAddress": "coordinator@example.com",
+      "threadId": "synthetic-interop-thread-001",
+      "messageId": "synthetic-interop-mail-001",
+      "sourceId": "synthetic-interop-mail-001",
+      "containerId": "all_mail",
+      "containerType": "mailbox",
+      "account": "partheanon-interop@example.test",
+      "provider": "google",
+      "recordKey": "google|partheanon-interop@example.test|mailbox|all_mail|synthetic-interop-mail-001"
+    },
+    {
+      "sourceUpdatedAt": "9876543210123456790",
+      "sourceVersion": "9876543210123456790",
+      "inScopeLabel": "INBOX",
+      "read": false,
+      "receivedAt": "2026-10-23T16:00:00.000Z",
+      "subject": "Synthetic: delivery readiness",
+      "senderAddress": "coordinator@example.com",
+      "threadId": "synthetic-interop-thread-002",
+      "messageId": "synthetic-interop-mail-002",
+      "sourceId": "synthetic-interop-mail-002",
+      "containerId": "all_mail",
+      "containerType": "mailbox",
+      "account": "partheanon-interop@example.test",
+      "provider": "google",
+      "recordKey": "google|partheanon-interop@example.test|mailbox|all_mail|synthetic-interop-mail-002"
+    }
+  ],
+  "scope": {
+    "alignment": "utc_day",
+    "receivedAfter": "2026-10-16T00:00:00.000Z",
+    "labelId": "INBOX",
+    "emailScope": "inbox"
+  },
+  "container": {
+    "id": "all_mail",
+    "type": "mailbox"
+  },
+  "resourceType": "email_message",
+  "batchId": "gsync_8888888888888888888888888888888888888888",
+  "producer": {
+    "version": "0.1.0",
+    "name": "n8n-partheanon-pilot"
+  },
+  "generatedAt": "2026-10-23T18:30:00.000Z",
+  "coverage": {
+    "reconciliationRule": "Records for this account carrying scope.labelId and received after scope.receivedAfter that are absent from records are out of scope (hide; not deleted at source).",
+    "scopeExitCount": 0,
+    "deletionCount": 0,
+    "recordCount": 2,
+    "pagesFetched": 1,
+    "authoritative": true,
+    "complete": true
+  },
+  "scopeExits": [],
+  "deletions": [],
+  "syncMode": "initial",
+  "account": "partheanon-interop@example.test",
+  "provider": "google",
+  "schemaVersion": "partheanon.sync.v1"
+}

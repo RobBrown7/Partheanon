@@ -120,3 +120,8 @@ npx tsc --noEmit
 The Python scripts are localhost-only and use disposable synthetic data/keys. The v1.1 test delivers all ten bodies separately, verifies full-envelope/receipt persistence and authenticated lookup, expected seven deferred entries across the supplied fixtures, initial dashboard projection, source-version protection, typed removals, re-entry, rolling-scope continuity, and credential isolation. Regression tests cover concurrency, replay conflicts, size bounds and key revocation. A read-only hosted probe verifies hosting denial and invalid application-key rejection, without inserting records.
 
 Official semantics checked while implementing: [Gmail history versions](https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.history/list), [Calendar cancellation resource](https://developers.google.com/workspace/calendar/api/v3/reference/events), [Calendar overlap query bounds](https://developers.google.com/workspace/calendar/api/v3/reference/events/list), [Calendar/all-day timezone rules](https://developers.google.com/workspace/calendar/api/concepts/events-calendars#time_zones). These provider references do not establish an atomic sender snapshot or resolve the documented sender boundary discrepancies.
+
+
+## Sender interoperability and supervised pilot preparation
+
+See [the interoperability fixture pack](interop-v1.1/README.md) for the pinned receiver canonicalization helper, exact expected digests, accepted/lookup/duplicate examples, secure provisioning path, hosted acceptance checklist and remaining sender/receiver work. These are preparation artifacts; no live delivery or production activation is implied.

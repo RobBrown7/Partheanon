@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "partheanon.sync.v1",
+  "provider": "google",
+  "account": "partheanon-interop@example.test",
+  "syncMode": "incremental",
+  "deletions": [
+    {
+      "recordKey": "google|partheanon-interop@example.test|mailbox|all_mail|synthetic-interop-mail-001",
+      "sourceId": "synthetic-interop-mail-001",
+      "kind": "deleted_at_source",
+      "sourceUpdatedAt": null
+    }
+  ],
+  "scopeExits": [],
+  "coverage": {
+    "complete": true,
+    "authoritative": false,
+    "pagesFetched": 2,
+    "recordCount": 0,
+    "deletionCount": 1,
+    "scopeExitCount": 0,
+    "reconciliationRule": "Delta only. Absence implies nothing."
+  },
+  "generatedAt": "2026-10-23T18:30:00.000Z",
+  "producer": {
+    "name": "n8n-partheanon-pilot",
+    "version": "0.1.0"
+  },
+  "batchId": "gsync_9999999999999999999999999999999999999999",
+  "resourceType": "email_message",
+  "container": {
+    "type": "mailbox",
+    "id": "all_mail"
+  },
+  "scope": {
+    "emailScope": "inbox",
+    "labelId": "INBOX",
+    "receivedAfter": "2026-10-16T00:00:00.000Z",
+    "alignment": "utc_day"
+  },
+  "records": []
+}

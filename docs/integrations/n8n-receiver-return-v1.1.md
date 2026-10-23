@@ -33,3 +33,8 @@ Next: prepare a manual real-destination pilot with independently namespaced dest
 Do not claim a hosted end-to-end pass based only on these local tests. Do not clear existing Command Center rows, fetch fuller source bodies, post a Guild message, mutate provider data, or enable absence pruning.
 
 Full receiver contract: [n8n-intake.md](n8n-intake.md).
+
+
+## Sender interoperability and supervised pilot preparation
+
+See [the interoperability fixture pack](interop-v1.1/README.md) for the pinned receiver canonicalization helper, exact expected digests, accepted/lookup/duplicate examples, secure provisioning path, hosted acceptance checklist and remaining sender/receiver work. These are preparation artifacts; no live delivery or production activation is implied.

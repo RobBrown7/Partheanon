@@ -1,0 +1,16 @@
+{
+  "ok": true,
+  "batchId": "gsync_8888888888888888888888888888888888888888",
+  "status": "accepted",
+  "receivedAt": "2026-10-23T19:00:01.000Z",
+  "applied": 2,
+  "unchanged": 0,
+  "stale": 0,
+  "deferred": 0,
+  "absencePruning": "disabled",
+  "baseline": "additive",
+  "sequence": 1,
+  "published": true,
+  "coverage": "provisional",
+  "receiptDigest": "faac0587c06150404e43c5db632378a6178fb6da539d181f3dfb57c8c358e852"
+}
