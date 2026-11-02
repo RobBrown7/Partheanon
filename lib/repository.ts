@@ -1,6 +1,6 @@
 import {ingestSources,removeIngestAccount} from "./ingest-store";
-import {prerequisites,validateDependencies} from "./task-dependencies.mjs";
-import { descendants,validateParent } from "./task-work.mjs";
+import {prerequisites} from "./task-dependencies.mjs";
+import {validateTaskChange} from "./task-validation.mjs";
 import { allSourceInfo } from "./connections";
 import { getDb } from "../db";
 import { commitments, focusBlocks, sourceSnapshots, preferences, accountConnections, workLogs, oauthAccounts, oauthStates, dismissedEmails, workOutputs } from "../db/schema";
@@ -16,11 +16,8 @@ export async function saveTask(owner:string,input:unknown) {
  const t=taskSchema.parse(input),db=getDb();const existing=await db.select().from(commitments).where(eq(commitments.id,t.id));if(existing.length&&existing[0].owner!==owner)throw new Error("Task not available");
  const owned=await db.select().from(commitments).where(eq(commitments.owner,owner));
  const parentId=t.parentId===undefined?existing[0]?.parentId||null:t.parentId;
- validateParent(owned,{...t,parentId});
- const childIds=descendants(owned,t.id);
- if(t.status==="done"&&owned.some(c=>childIds.has(c.id)&&c.status!=="done"))throw new Error("Complete the subtasks before completing this parent.");
  const dependsOn=t.dependsOn??(existing[0]?JSON.parse(existing[0].dependsOn):[]);
- const taskGraph=owned.map(task=>({...task,dependsOn:JSON.parse(task.dependsOn)}));validateDependencies(taskGraph,{...t,parentId,dependsOn});if(t.status==="done"&&prerequisites(taskGraph,{dependsOn}).length)throw new Error("Complete the prerequisites before completing this task.");
+ const taskGraph=owned.map(task=>({...task,dependsOn:JSON.parse(task.dependsOn)}));validateTaskChange(taskGraph,{...t,parentId,dependsOn});
  const priority={deadlineSource:t.deadlineSource??existing[0]?.deadlineSource??"unknown",lifeHealthSafety:t.lifeHealthSafety??existing[0]?.lifeHealthSafety??false,securityPrivacy:t.securityPrivacy??existing[0]?.securityPrivacy??false,important:t.important===undefined?existing[0]?.important??null:t.important,dependsOn:JSON.stringify(dependsOn),delayImpact:t.delayImpact??existing[0]?.delayImpact??"unknown",peopleBlocked:t.peopleBlocked??existing[0]?.peopleBlocked??false,delayConsequence:t.delayConsequence??existing[0]?.delayConsequence??""};
  const values={...t,...priority,parentId,sourceKey:existing[0]?.sourceKey||t.sourceKey||"",owner,createdAt:existing[0]?.createdAt||new Date().toISOString()};
  await db.insert(commitments).values(values).onConflictDoUpdate({target:commitments.id,set:{...t,...priority,parentId,sourceKey:values.sourceKey}});if(t.status==="done")await db.delete(focusBlocks).where(and(eq(focusBlocks.owner,owner),eq(focusBlocks.taskId,t.id),gt(focusBlocks.end,new Date().toISOString())));if(t.status==="done"||t.status==="waiting"||t.minutes===0||prerequisites(taskGraph,{dependsOn}).length)await db.update(preferences).set({focusTaskId:null}).where(and(eq(preferences.owner,owner),eq(preferences.focusTaskId,t.id)));return {...t,...priority,dependsOn,parentId,sourceKey:values.sourceKey};
