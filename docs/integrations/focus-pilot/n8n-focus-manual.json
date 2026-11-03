@@ -1,0 +1,712 @@
+{
+  "name": "Partheanon Focus — supervised manual pilot",
+  "active": false,
+  "nodes": [
+    {
+      "id": "manual-pilot",
+      "name": "Manual pilot",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "claim-approved-block",
+      "name": "Claim approved block",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://partheanon-forge.athena-works-8404.chatgpt.site/api/focus-worker",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"action\":\"claim\"}",
+        "options": {
+          "timeout": 20000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          }
+        }
+      },
+      "notes": "Select the dedicated Custom Auth credential with both Authorization (focus worker key) and OAI-Sites-Authorization headers. Never inline credentials."
+    },
+    {
+      "id": "only-claimed-work",
+      "name": "Only claimed work",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const job=$input.first().json.job; return job?[{json:{job}}]:[];"
+      }
+    },
+    {
+      "id": "read-existing-event",
+      "name": "Read existing event",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ 'https://www.googleapis.com/calendar/v3/calendars/' + encodeURIComponent($('Claim approved block').first().json.job.calendarId) + '/events/' + encodeURIComponent($('Claim approved block').first().json.job.eventId) + '?fields=id,etag,summary,start,end,status,visibility,transparency,attendees,extendedProperties,recurrence,recurringEventId,eventType' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleCalendarOAuth2Api",
+        "options": {
+          "timeout": 20000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          },
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "notes": "Select the approved account Google Calendar OAuth credential. Fixed Google API host, one pinned secondary calendar, no attendees, sendUpdates=none."
+    },
+    {
+      "id": "plan-owned-change",
+      "name": "Plan owned change",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        0
+      ],
+      "parameters": {
+        "jsCode": "function focusEventBody(job){return {summary:job.title,start:{dateTime:job.start,timeZone:'America/Phoenix'},end:{dateTime:job.end,timeZone:'America/Phoenix'},visibility:'private',transparency:'opaque',attendees:[],extendedProperties:{private:{partheanonBlockId:job.blockId,partheanonCommandId:job.id}}};}\nfunction cleanFocusReadback(job,e){\n const p=e?.extendedProperties?.private;\n if(!e||(e.recurrence||[]).length||e.recurringEventId||(e.eventType&&e.eventType!=='default')||e.id!==job.eventId||!e.etag||e.status!=='confirmed'||e.summary!==job.title||Date.parse(e.start?.dateTime)!==Date.parse(job.start)||Date.parse(e.end?.dateTime)!==Date.parse(job.end)||e.visibility!=='private'||(e.transparency||'opaque')!=='opaque'||(e.attendees||[]).length||p?.partheanonBlockId!==job.blockId||p?.partheanonCommandId!==job.id)throw new Error('Readback differs from the approved block.');\n return {id:e.id,etag:e.etag,summary:e.summary,start:{dateTime:new Date(e.start.dateTime).toISOString()},end:{dateTime:new Date(e.end.dateTime).toISOString()},status:e.status,visibility:e.visibility,transparency:'opaque',attendees:[],extendedProperties:{private:{partheanonBlockId:p.partheanonBlockId,partheanonCommandId:p.partheanonCommandId}}};\n}\nfunction planGoogleMutation(job,status,event){\n if(job.schemaVersion!=='partheanon.focus.v1'||job.title!=='Focus time'||!job.calendarId.endsWith('@group.calendar.google.com')||job.sendUpdates!=='none'||(job.attendees||[]).length||!/^[0-9a-v]{5,64}$/.test(job.eventId))throw new Error('Unsupported pilot command.');\n if(status===404){if(job.operation!=='create')throw new Error('Published event missing; review before creating anything else.');return {method:'POST',body:{id:job.eventId,...focusEventBody(job)}};}\n if(status!==200)throw new Error('Provider lookup failed; delivery remains unresolved.');\n try{return {method:null,event:cleanFocusReadback(job,event)};}catch{}\n if(job.operation!=='reschedule'||event?.id!==job.eventId||(event.recurrence||[]).length||event.recurringEventId||event?.extendedProperties?.private?.partheanonBlockId!==job.blockId||event.etag!==job.expectedEtag||event.status==='cancelled'||(event.attendees||[]).length)throw new Error('Event changed or ownership does not match.');\n return {method:'PATCH',etag:event.etag,body:focusEventBody(job)};\n}\nconst job=$('Claim approved block').first().json.job,response=$input.first().json;try {const plan=planGoogleMutation(job,response.statusCode,response.body);return [{json:{job,...plan,decision:plan.method?'write':'verified'}}];}catch{return [{json:{job,decision:'attention'}}];}"
+      }
+    },
+    {
+      "id": "already-verified",
+      "name": "Already verified",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1100,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Already verified",
+              "leftValue": "={{ $json.decision === 'verified' }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "write-permitted-plan",
+      "name": "Write permitted plan",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1320,
+        120
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Write permitted plan",
+              "leftValue": "={{ $json.decision === 'write' }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "recheck-write-lease",
+      "name": "Recheck write lease",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1540,
+        120
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://partheanon-forge.athena-works-8404.chatgpt.site/api/focus-worker",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {action:'status',value:{id:$('Claim approved block').first().json.job.id,claimToken:$('Claim approved block').first().json.job.claimToken}} }}",
+        "options": {
+          "timeout": 20000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          }
+        }
+      },
+      "notes": "Select the dedicated Custom Auth credential with both Authorization (focus worker key) and OAI-Sites-Authorization headers. Never inline credentials."
+    },
+    {
+      "id": "lease-still-valid",
+      "name": "Lease still valid",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1760,
+        120
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Lease still valid",
+              "leftValue": "={{ $json.mayWrite === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "create-or-reschedule",
+      "name": "Create or reschedule",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1980,
+        120
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Create or reschedule",
+              "leftValue": "={{ $('Plan owned change').first().json.method === 'POST' }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "create-focus-event",
+      "name": "Create focus event",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2200,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://www.googleapis.com/calendar/v3/calendars/' + encodeURIComponent($('Claim approved block').first().json.job.calendarId) + '/events?sendUpdates=none' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleCalendarOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $('Plan owned change').first().json.body }}",
+        "options": {
+          "timeout": 20000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          },
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "notes": "Select the approved account Google Calendar OAuth credential. Fixed Google API host, one pinned secondary calendar, no attendees, sendUpdates=none."
+    },
+    {
+      "id": "reschedule-owned-event",
+      "name": "Reschedule owned event",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2200,
+        240
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ 'https://www.googleapis.com/calendar/v3/calendars/' + encodeURIComponent($('Claim approved block').first().json.job.calendarId) + '/events/' + encodeURIComponent($('Claim approved block').first().json.job.eventId) + '?sendUpdates=none' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleCalendarOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $('Plan owned change').first().json.body }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "If-Match",
+              "value": "={{ $('Plan owned change').first().json.etag }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 20000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          },
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "notes": "Select the approved account Google Calendar OAuth credential. Fixed Google API host, one pinned secondary calendar, no attendees, sendUpdates=none."
+    },
+    {
+      "id": "read-back-provider-event",
+      "name": "Read back provider event",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2420,
+        120
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ 'https://www.googleapis.com/calendar/v3/calendars/' + encodeURIComponent($('Claim approved block').first().json.job.calendarId) + '/events/' + encodeURIComponent($('Claim approved block').first().json.job.eventId) + '?fields=id,etag,summary,start,end,status,visibility,transparency,attendees,extendedProperties,recurrence,recurringEventId,eventType' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleCalendarOAuth2Api",
+        "options": {
+          "timeout": 20000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          },
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "notes": "Select the approved account Google Calendar OAuth credential. Fixed Google API host, one pinned secondary calendar, no attendees, sendUpdates=none."
+    },
+    {
+      "id": "verify-provider-readback",
+      "name": "Verify provider readback",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2640,
+        120
+      ],
+      "parameters": {
+        "jsCode": "function cleanFocusReadback(job,e){\n const p=e?.extendedProperties?.private;\n if(!e||(e.recurrence||[]).length||e.recurringEventId||(e.eventType&&e.eventType!=='default')||e.id!==job.eventId||!e.etag||e.status!=='confirmed'||e.summary!==job.title||Date.parse(e.start?.dateTime)!==Date.parse(job.start)||Date.parse(e.end?.dateTime)!==Date.parse(job.end)||e.visibility!=='private'||(e.transparency||'opaque')!=='opaque'||(e.attendees||[]).length||p?.partheanonBlockId!==job.blockId||p?.partheanonCommandId!==job.id)throw new Error('Readback differs from the approved block.');\n return {id:e.id,etag:e.etag,summary:e.summary,start:{dateTime:new Date(e.start.dateTime).toISOString()},end:{dateTime:new Date(e.end.dateTime).toISOString()},status:e.status,visibility:e.visibility,transparency:'opaque',attendees:[],extendedProperties:{private:{partheanonBlockId:p.partheanonBlockId,partheanonCommandId:p.partheanonCommandId}}};\n}\nconst job=$('Claim approved block').first().json.job,r=$input.first().json;try {if(r.statusCode!==200)throw new Error();return [{json:{job,event:cleanFocusReadback(job,r.body),decision:'verified'}}];}catch{return [{json:{job,decision:'attention'}}];}"
+      }
+    },
+    {
+      "id": "provider-verified",
+      "name": "Provider verified",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2860,
+        120
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Provider verified",
+              "leftValue": "={{ $json.decision === 'verified' }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "save-verified-receipt",
+      "name": "Save verified receipt",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3080,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://partheanon-forge.athena-works-8404.chatgpt.site/api/focus-worker",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {action:'verified',value:{id:$('Claim approved block').first().json.job.id,claimToken:$('Claim approved block').first().json.job.claimToken,event:$json.event}} }}",
+        "options": {
+          "timeout": 20000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          }
+        }
+      },
+      "notes": "Select the dedicated Custom Auth credential with both Authorization (focus worker key) and OAI-Sites-Authorization headers. Never inline credentials."
+    },
+    {
+      "id": "hold-for-review",
+      "name": "Hold for review",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3080,
+        360
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://partheanon-forge.athena-works-8404.chatgpt.site/api/focus-worker",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpCustomAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {action:'attention',value:{id:$('Claim approved block').first().json.job.id,claimToken:$('Claim approved block').first().json.job.claimToken}} }}",
+        "options": {
+          "timeout": 20000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          }
+        }
+      },
+      "notes": "Select the dedicated Custom Auth credential with both Authorization (focus worker key) and OAI-Sites-Authorization headers. Never inline credentials."
+    },
+    {
+      "id": "check-saved-receipt",
+      "name": "Check saved receipt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3300,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const r=$input.first().json,job=$('Claim approved block').first().json.job;if(r.id!==job.id||r.state!=='confirmed')throw new Error('Receipt did not match. Do not issue a new request.');return [{json:{requestId:r.id,state:r.state,duplicate:r.duplicate}}];"
+      }
+    }
+  ],
+  "connections": {
+    "Manual pilot": {
+      "main": [
+        [
+          {
+            "node": "Claim approved block",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claim approved block": {
+      "main": [
+        [
+          {
+            "node": "Only claimed work",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Only claimed work": {
+      "main": [
+        [
+          {
+            "node": "Read existing event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read existing event": {
+      "main": [
+        [
+          {
+            "node": "Plan owned change",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Plan owned change": {
+      "main": [
+        [
+          {
+            "node": "Already verified",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Already verified": {
+      "main": [
+        [
+          {
+            "node": "Save verified receipt",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Write permitted plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write permitted plan": {
+      "main": [
+        [
+          {
+            "node": "Recheck write lease",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Hold for review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recheck write lease": {
+      "main": [
+        [
+          {
+            "node": "Lease still valid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lease still valid": {
+      "main": [
+        [
+          {
+            "node": "Create or reschedule",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Hold for review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create or reschedule": {
+      "main": [
+        [
+          {
+            "node": "Create focus event",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reschedule owned event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create focus event": {
+      "main": [
+        [
+          {
+            "node": "Read back provider event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reschedule owned event": {
+      "main": [
+        [
+          {
+            "node": "Read back provider event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read back provider event": {
+      "main": [
+        [
+          {
+            "node": "Verify provider readback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify provider readback": {
+      "main": [
+        [
+          {
+            "node": "Provider verified",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Provider verified": {
+      "main": [
+        [
+          {
+            "node": "Save verified receipt",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Hold for review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save verified receipt": {
+      "main": [
+        [
+          {
+            "node": "Check saved receipt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "executionTimeout": 180,
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveManualExecutions": false,
+    "timezone": "America/Phoenix"
+  },
+  "pinData": {},
+  "tags": []
+}
