@@ -45,3 +45,14 @@ export const ingestStreams=sqliteTable("ingest_streams",{id:text("id").primaryKe
 export const ingestRecords=sqliteTable("ingest_records",{owner:text("owner").notNull(),streamId:text("stream_id").notNull(),recordId:text("record_id").notNull(),updatedAt:text("updated_at").notNull(),deleted:integer("deleted",{mode:"boolean"}).notNull(),payload:text("payload"),state:text("state").notNull().default("active"),reason:text("reason").notNull().default(""),evidenceBatch:text("evidence_batch").notNull().default("")},t=>[primaryKey({columns:[t.streamId,t.recordId]})]);
 export const ingestReceipts=sqliteTable("ingest_receipts",{streamId:text("stream_id").notNull(),batchId:text("batch_id").notNull(),digest:text("digest").notNull(),receivedAt:text("received_at").notNull(),recordCount:integer("record_count").notNull(),deletedCount:integer("deleted_count").notNull(),result:text("result").notNull().default("{}"),envelope:text("envelope")},t=>[primaryKey({columns:[t.streamId,t.batchId]})]);
 export const ingestDeferred=sqliteTable("ingest_deferred",{owner:text("owner").notNull(),streamId:text("stream_id").notNull(),batchId:text("batch_id").notNull(),recordId:text("record_id").notNull(),kind:text("kind").notNull(),reason:text("reason").notNull(),payload:text("payload").notNull(),createdAt:text("created_at").notNull()},t=>[primaryKey({columns:[t.streamId,t.batchId,t.recordId]})]);
+
+// Separate authority and durable commands for the one-calendar, no-attendee pilot.
+export const focusCalendars=sqliteTable("focus_calendars",{
+ owner:text("owner").primaryKey(),id:text("id").notNull(),account:text("account").notNull(),calendarId:text("calendar_id").notNull(),enabled:integer("enabled",{mode:"boolean"}).notNull().default(false),
+ keyDigest:text("key_digest"),keyExpiresAt:text("key_expires_at"),leaseCommand:text("lease_command"),leaseToken:text("lease_token"),leaseUntil:integer("lease_until").notNull().default(0),createdAt:text("created_at").notNull()
+});
+export const focusCommands=sqliteTable("focus_commands",{
+ id:text("id").primaryKey(),owner:text("owner").notNull(),calendarConfigId:text("calendar_config_id").notNull(),blockId:text("block_id").notNull(),taskId:text("task_id").notNull(),eventId:text("event_id").notNull(),operation:text("operation").notNull(),
+ title:text("title").notNull(),start:text("start").notNull(),end:text("end").notNull(),baselineStart:text("baseline_start").notNull(),baselineEnd:text("baseline_end").notNull(),expectedEtag:text("expected_etag"),
+ state:text("state").notNull(),claimToken:text("claim_token"),attempts:integer("attempts").notNull().default(0),receipt:text("receipt"),error:text("error").notNull().default(""),createdAt:text("created_at").notNull(),confirmedAt:text("confirmed_at")
+});

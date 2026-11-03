@@ -1,0 +1,4 @@
+import {json} from '../../../lib/api';
+import {authenticateFocusWorker,claimFocus,workerStatus,finishFocus,failFocus} from '../../../lib/focus-store';
+export const dynamic='force-dynamic';
+export async function POST(r:Request){try{const config=await authenticateFocusWorker(r);const text=await r.text();if(text.length>8192)return json({error:'Request too large'},413);const body=JSON.parse(text);switch(body.action){case 'claim':return json(await claimFocus(config));case 'status':return json(await workerStatus(config,body.value));case 'verified':return json(await finishFocus(config,body.value));case 'attention':return json(await failFocus(config,body.value));default:return json({error:'Unknown worker action'},400);}}catch(e){const message=e instanceof Error?e.message:'Worker request failed';return json({error:message},message.includes('authorization')?401:400);}}

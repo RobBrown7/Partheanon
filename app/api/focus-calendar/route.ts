@@ -1,0 +1,5 @@
+import {authorize,json,failure} from '../../../lib/api';
+import {focusOverview,configureFocus,issueFocusKey,setFocusEnabled,revokeFocusKey,approveFocus,retryFocus} from '../../../lib/focus-store';
+export const dynamic='force-dynamic';
+export async function GET(r:Request){try{return json(await focusOverview(await authorize(r)));}catch(e){return failure(e);}}
+export async function POST(r:Request){try{const owner=await authorize(r);const text=await r.text();if(text.length>4096)throw new Error('Request too large');const body=JSON.parse(text);switch(body.action){case 'configure':return json(await configureFocus(owner,body.value));case 'key':return json(await issueFocusKey(owner));case 'pause':return json(await setFocusEnabled(owner,false));case 'enable':return json(await setFocusEnabled(owner,true));case 'revoke':return json(await revokeFocusKey(owner));case 'approve':return json(await approveFocus(owner,body.value));case 'retry':return json(await retryFocus(owner,body.id));default:throw new Error('Unknown focus action');}}catch(e){return failure(e);}}

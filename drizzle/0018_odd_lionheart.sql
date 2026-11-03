@@ -1,0 +1,1 @@
+ALTER TABLE `focus_calendars` ADD `lease_token` text;
